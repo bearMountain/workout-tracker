@@ -61,12 +61,10 @@ struct HomeView: View {
                 WorkoutDetailView(workoutType: workoutType, viewModel: viewModel!)
             }
         }
-        .onAppear {
+        .task {
             if viewModel == nil {
                 viewModel = WorkoutViewModel(modelContext: modelContext)
             }
-        }
-        .task {
             if !hasInitialSynced {
                 hasInitialSynced = true
                 await viewModel?.syncFromAPI()

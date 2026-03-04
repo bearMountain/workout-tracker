@@ -48,14 +48,12 @@ struct HistoryView: View {
                 await viewModel?.syncFromAPI()
             }
         }
-        .onAppear {
+        .task {
             if viewModel == nil {
                 viewModel = HistoryViewModel(modelContext: modelContext)
             } else {
                 viewModel?.fetchLogs()
             }
-        }
-        .task {
             if !hasInitialSynced {
                 hasInitialSynced = true
                 await viewModel?.syncFromAPI()
