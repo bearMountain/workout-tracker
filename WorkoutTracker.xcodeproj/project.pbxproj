@@ -12,10 +12,16 @@
 		APP003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = RES001 /* Assets.xcassets */; };
 		CMP001 /* ExerciseRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC014 /* ExerciseRow.swift */; };
 		CMP002 /* WorkoutCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC015 /* WorkoutCard.swift */; };
+		CMP003 /* BodyWeightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC022 /* BodyWeightCard.swift */; };
+		CMP004 /* AddBodyWeightSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC023 /* AddBodyWeightSheet.swift */; };
 		MDL001 /* WorkoutType.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC003 /* WorkoutType.swift */; };
 		MDL002 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC004 /* Exercise.swift */; };
 		MDL003 /* WorkoutLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC005 /* WorkoutLog.swift */; };
 		MDL004 /* ContentNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC006 /* ContentNote.swift */; };
+		MDL005 /* BodyWeightEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC024 /* BodyWeightEntry.swift */; };
+		PRG001 /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC025 /* ProgressView.swift */; };
+		PRG002 /* ExerciseChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC026 /* ExerciseChartView.swift */; };
+		PRG003 /* BodyWeightChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC027 /* BodyWeightChartView.swift */; };
 		PRV001 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC017 /* SampleData.swift */; };
 		SVC001 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC018 /* APIClient.swift */; };
 		SVC002 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC019 /* APIModels.swift */; };
@@ -28,6 +34,7 @@
 		VIW006 /* ExerciseEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC021 /* ExerciseEditorSheet.swift */; };
 		VWM001 /* WorkoutViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC007 /* WorkoutViewModel.swift */; };
 		VWM002 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC008 /* HistoryViewModel.swift */; };
+		VWM003 /* ProgressViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC028 /* ProgressViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +60,13 @@
 		SRC018 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		SRC019 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
 		SRC021 /* ExerciseEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseEditorSheet.swift; sourceTree = "<group>"; };
+		SRC022 /* BodyWeightCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightCard.swift; sourceTree = "<group>"; };
+		SRC023 /* AddBodyWeightSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBodyWeightSheet.swift; sourceTree = "<group>"; };
+		SRC024 /* BodyWeightEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightEntry.swift; sourceTree = "<group>"; };
+		SRC025 /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
+		SRC026 /* ExerciseChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseChartView.swift; sourceTree = "<group>"; };
+		SRC027 /* BodyWeightChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightChartView.swift; sourceTree = "<group>"; };
+		SRC028 /* ProgressViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +119,7 @@
 				SRC004 /* Exercise.swift */,
 				SRC005 /* WorkoutLog.swift */,
 				SRC006 /* ContentNote.swift */,
+				SRC024 /* BodyWeightEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -114,6 +129,7 @@
 			children = (
 				SRC007 /* WorkoutViewModel.swift */,
 				SRC008 /* HistoryViewModel.swift */,
+				SRC028 /* ProgressViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -128,6 +144,7 @@
 				SRC012 /* HistoryView.swift */,
 				SRC013 /* NotesView.swift */,
 				GRP007 /* Components */,
+				GRP011 /* Progress */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -137,6 +154,8 @@
 			children = (
 				SRC014 /* ExerciseRow.swift */,
 				SRC015 /* WorkoutCard.swift */,
+				SRC022 /* BodyWeightCard.swift */,
+				SRC023 /* AddBodyWeightSheet.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -164,6 +183,16 @@
 				SRC019 /* APIModels.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		GRP011 /* Progress */ = {
+			isa = PBXGroup;
+			children = (
+				SRC025 /* ProgressView.swift */,
+				SRC026 /* ExerciseChartView.swift */,
+				SRC027 /* BodyWeightChartView.swift */,
+			);
+			path = Progress;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -194,7 +223,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					TGT001 = {
 						CreatedOnToolsVersion = 15.0;
@@ -241,8 +270,10 @@
 				MDL002 /* Exercise.swift in Sources */,
 				MDL003 /* WorkoutLog.swift in Sources */,
 				MDL004 /* ContentNote.swift in Sources */,
+				MDL005 /* BodyWeightEntry.swift in Sources */,
 				VWM001 /* WorkoutViewModel.swift in Sources */,
 				VWM002 /* HistoryViewModel.swift in Sources */,
+				VWM003 /* ProgressViewModel.swift in Sources */,
 				VIW001 /* HomeView.swift in Sources */,
 				VIW002 /* WorkoutDetailView.swift in Sources */,
 				VIW003 /* LogWorkoutSheet.swift in Sources */,
@@ -251,6 +282,11 @@
 				VIW006 /* ExerciseEditorSheet.swift in Sources */,
 				CMP001 /* ExerciseRow.swift in Sources */,
 				CMP002 /* WorkoutCard.swift in Sources */,
+				CMP003 /* BodyWeightCard.swift in Sources */,
+				CMP004 /* AddBodyWeightSheet.swift in Sources */,
+				PRG001 /* ProgressView.swift in Sources */,
+				PRG002 /* ExerciseChartView.swift in Sources */,
+				PRG003 /* BodyWeightChartView.swift in Sources */,
 				THM001 /* AppTheme.swift in Sources */,
 				PRV001 /* SampleData.swift in Sources */,
 				SVC001 /* APIClient.swift in Sources */,
