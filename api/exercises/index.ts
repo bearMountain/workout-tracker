@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { sql } from '../../lib/db.js';
+import { sql, normalizeExercise } from '../../lib/db.js';
 import type { CreateExerciseInput, Exercise } from '../../lib/types.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         `;
       }
       
-      return res.status(200).json(result.rows);
+      return res.status(200).json(result.rows.map(normalizeExercise));
     }
 
     if (req.method === 'POST') {
@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         RETURNING *
       `;
 
-      return res.status(201).json(result.rows[0]);
+      return res.status(201).json(normalizeExercise(result.rows[0]));
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

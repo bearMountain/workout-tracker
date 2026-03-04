@@ -67,3 +67,22 @@ export function errorResponse(message: string, status = 400) {
     headers: { 'Content-Type': 'application/json' },
   });
 }
+
+// Convert Postgres DECIMAL strings to numbers to match TypeScript types
+export function normalizeExercise(row: Record<string, unknown>) {
+  return {
+    ...row,
+    target_weight: Number(row.target_weight),
+    target_reps: Number(row.target_reps),
+    order_index: Number(row.order_index),
+  };
+}
+
+export function normalizeWorkoutLog(row: Record<string, unknown>) {
+  return {
+    ...row,
+    actual_weight: Number(row.actual_weight),
+    actual_reps: Number(row.actual_reps),
+    feeling: Number(row.feeling),
+  };
+}

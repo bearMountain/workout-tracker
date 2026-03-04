@@ -182,21 +182,33 @@ actor APIClient {
         do {
             (data, response) = try await session.data(for: request)
         } catch {
+            print("🔴 Network error: \(error)")
             throw APIClientError.networkError(error)
         }
         
         guard let httpResponse = response as? HTTPURLResponse else {
+            print("🔴 Invalid response type")
             throw APIClientError.invalidResponse
+        }
+        
+        // Log raw response for debugging
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📡 API Response [\(httpResponse.statusCode)]: \(jsonString.prefix(500))")
         }
         
         if httpResponse.statusCode >= 400 {
             let errorMessage = (try? decoder.decode(APIError.self, from: data))?.error ?? "Unknown error"
+            print("🔴 HTTP Error \(httpResponse.statusCode): \(errorMessage)")
             throw APIClientError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
         }
         
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
+            print("🔴 Decoding error for \(T.self): \(error)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("🔴 Raw JSON that failed to decode: \(jsonString)")
+            }
             throw APIClientError.decodingError(error)
         }
     }

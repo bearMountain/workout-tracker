@@ -17,6 +17,8 @@
 		MDL003 /* WorkoutLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC005 /* WorkoutLog.swift */; };
 		MDL004 /* ContentNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC006 /* ContentNote.swift */; };
 		PRV001 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC017 /* SampleData.swift */; };
+		SVC001 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC018 /* APIClient.swift */; };
+		SVC002 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC019 /* APIModels.swift */; };
 		THM001 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC016 /* AppTheme.swift */; };
 		VIW001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC009 /* HomeView.swift */; };
 		VIW002 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC010 /* WorkoutDetailView.swift */; };
@@ -47,6 +49,8 @@
 		SRC015 /* WorkoutCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCard.swift; sourceTree = "<group>"; };
 		SRC016 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		SRC017 /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
+		SRC018 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		SRC019 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +80,7 @@
 				GRP004 /* Models */,
 				GRP005 /* ViewModels */,
 				GRP006 /* Views */,
+				GRP010 /* Services */,
 				GRP008 /* Theme */,
 				GRP009 /* Preview Content */,
 				RES001 /* Assets.xcassets */,
@@ -149,6 +154,15 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		GRP010 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				SRC018 /* APIClient.swift */,
+				SRC019 /* APIModels.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -156,7 +170,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CFG003 /* Build configuration list for PBXNativeTarget "WorkoutTracker" */;
 			buildPhases = (
-				SRC018 /* Sources */,
+				SRC020 /* Sources */,
 				FRM001 /* Frameworks */,
 				RSC001 /* Resources */,
 			);
@@ -214,7 +228,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		SRC018 /* Sources */ = {
+		SRC020 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -235,6 +249,8 @@
 				CMP002 /* WorkoutCard.swift in Sources */,
 				THM001 /* AppTheme.swift in Sources */,
 				PRV001 /* SampleData.swift in Sources */,
+				SVC001 /* APIClient.swift in Sources */,
+				SVC002 /* APIModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

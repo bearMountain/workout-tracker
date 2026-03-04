@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { sql } from '../../lib/db.js';
+import { sql, normalizeWorkoutLog } from '../../lib/db.js';
 import type { UpdateWorkoutLogInput, WorkoutLog } from '../../lib/types.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ error: 'Workout log not found' });
       }
 
-      return res.status(200).json(result.rows[0]);
+      return res.status(200).json(normalizeWorkoutLog(result.rows[0]));
     }
 
     if (req.method === 'PUT') {
@@ -57,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         RETURNING *
       `;
 
-      return res.status(200).json(result.rows[0]);
+      return res.status(200).json(normalizeWorkoutLog(result.rows[0]));
     }
 
     if (req.method === 'DELETE') {
