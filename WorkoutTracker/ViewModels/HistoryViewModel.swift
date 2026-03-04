@@ -136,9 +136,41 @@ class HistoryViewModel {
     }
     
     func deleteLog(_ log: WorkoutLog) {
+        let logId = log.id.uuidString
         modelContext.delete(log)
         try? modelContext.save()
         fetchLogs()
+        
+        Task {
+            await deleteLogFromAPI(logId)
+        }
+    }
+    
+    func deleteSession(_ session: WorkoutSession) {
+        let logIds = session.exercises.flatMap { $0.sets.map { $0.id.uuidString } }
+        
+        for exerciseSets in session.exercises {
+            for log in exerciseSets.sets {
+                modelContext.delete(log)
+            }
+        }
+        try? modelContext.save()
+        fetchLogs()
+        
+        Task {
+            for logId in logIds {
+                await deleteLogFromAPI(logId)
+            }
+        }
+    }
+    
+    @MainActor
+    private func deleteLogFromAPI(_ id: String) async {
+        do {
+            try await APIClient.shared.deleteLog(id: id)
+        } catch {
+            print("Failed to delete log from API: \(error.localizedDescription)")
+        }
     }
     
     var workoutDates: Set<Date> {

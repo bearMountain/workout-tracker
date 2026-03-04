@@ -85,9 +85,15 @@ struct HistoryView: View {
         ScrollView {
             LazyVStack(spacing: AppTheme.spacingLarge) {
                 ForEach(viewModel.sessions) { session in
-                    SessionCard(session: session, onDeleteLog: { log in
-                        viewModel.deleteLog(log)
-                    })
+                    SessionCard(
+                        session: session,
+                        onDeleteLog: { log in
+                            viewModel.deleteLog(log)
+                        },
+                        onDeleteSession: {
+                            viewModel.deleteSession(session)
+                        }
+                    )
                 }
             }
             .padding()
@@ -98,6 +104,9 @@ struct HistoryView: View {
 struct SessionCard: View {
     let session: WorkoutSession
     let onDeleteLog: (WorkoutLog) -> Void
+    let onDeleteSession: () -> Void
+    
+    @State private var showingDeleteConfirmation = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
@@ -108,6 +117,21 @@ struct SessionCard: View {
             }
         }
         .cardStyle()
+        .contextMenu {
+            Button(role: .destructive) {
+                showingDeleteConfirmation = true
+            } label: {
+                Label("Delete Entire Session", systemImage: "trash")
+            }
+        }
+        .alert("Delete Session?", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                onDeleteSession()
+            }
+        } message: {
+            Text("This will delete all \(session.totalSets) sets from this workout. This cannot be undone.")
+        }
     }
     
     private var headerSection: some View {
@@ -178,12 +202,13 @@ struct ExerciseSetsRow: View {
                         }
                         
                         Spacer()
-                    }
-                    .contextMenu {
+                        
                         Button(role: .destructive) {
                             onDeleteLog(log)
                         } label: {
-                            Label("Delete Set", systemImage: "trash")
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(AppTheme.textMuted)
                         }
                     }
                 }
