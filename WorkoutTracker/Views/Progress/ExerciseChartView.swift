@@ -47,7 +47,6 @@ struct ExerciseChartView: View {
     private var prBadge: some View {
         HStack(spacing: 4) {
             Image(systemName: "trophy.fill")
-                .symbolEffect(.bounce, options: .repeating)
             Text("NEW PR!")
         }
         .font(.caption.bold())

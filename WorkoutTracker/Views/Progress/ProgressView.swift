@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-struct ProgressView: View {
+struct ProgressTabView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: ProgressViewModel?
     @State private var selectedExerciseIndex = 0
@@ -164,6 +164,6 @@ struct ProgressView: View {
 }
 
 #Preview {
-    ProgressView()
+    ProgressTabView()
         .modelContainer(for: [Exercise.self, WorkoutLog.self, BodyWeightEntry.self], inMemory: true)
 }

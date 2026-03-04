@@ -25,7 +25,7 @@ struct ContentView: View {
                 }
                 .tag(2)
             
-            ProgressView()
+            ProgressTabView()
                 .tabItem {
                     Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
                 }
