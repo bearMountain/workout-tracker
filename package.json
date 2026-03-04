@@ -7,7 +7,8 @@
     "dev": "vercel dev",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "db:setup": "npx tsx scripts/setup-db.ts"
+    "db:setup": "npx tsx scripts/setup-db.ts",
+    "generate:swift": "quicktype lib/types.ts -o WorkoutTracker/Services/APIModels.swift --lang swift --just-types"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
@@ -16,6 +17,7 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@vercel/node": "^3.0.0",
+    "quicktype": "^23.2.6",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0"
   },

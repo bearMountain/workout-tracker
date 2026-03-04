@@ -5,11 +5,33 @@ struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: WorkoutViewModel?
     @State private var selectedWorkout: WorkoutType?
+    @State private var hasInitialSynced = false
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: AppTheme.spacingLarge) {
+                    if let viewModel = viewModel, viewModel.isSyncing {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .tint(AppTheme.accent)
+                            Text("Syncing...")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.textMuted)
+                        }
+                    }
+                    
+                    if let error = viewModel?.syncError {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(AppTheme.warning)
+                            Text(error)
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
+                        .cardStyle()
+                    }
+                    
                     statusSection
                     workoutsSection
                 }
@@ -18,6 +40,22 @@ struct HomeView: View {
             .background(AppTheme.background)
             .navigationTitle("Heavy Duty")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        Task {
+                            await viewModel?.syncFromAPI()
+                        }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundStyle(AppTheme.accent)
+                    }
+                    .disabled(viewModel?.isSyncing ?? false)
+                }
+            }
+            .refreshable {
+                await viewModel?.syncFromAPI()
+            }
             .navigationDestination(item: $selectedWorkout) { workoutType in
                 WorkoutDetailView(workoutType: workoutType, viewModel: viewModel!)
             }
@@ -25,6 +63,12 @@ struct HomeView: View {
         .onAppear {
             if viewModel == nil {
                 viewModel = WorkoutViewModel(modelContext: modelContext)
+            }
+        }
+        .task {
+            if !hasInitialSynced {
+                hasInitialSynced = true
+                await viewModel?.syncFromAPI()
             }
         }
     }

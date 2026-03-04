@@ -8,11 +8,54 @@ class WorkoutViewModel {
     
     var exercises: [Exercise] = []
     var recentLogs: [WorkoutLog] = []
+    var isSyncing = false
+    var syncError: String?
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         fetchExercises()
         fetchRecentLogs()
+    }
+    
+    // MARK: - API Sync
+    
+    @MainActor
+    func syncFromAPI() async {
+        isSyncing = true
+        syncError = nil
+        
+        do {
+            let apiExercises = try await APIClient.shared.fetchExercises()
+            
+            for apiExercise in apiExercises {
+                if let existingExercise = exercises.first(where: { $0.id.uuidString == apiExercise.id }) {
+                    existingExercise.name = apiExercise.name
+                    existingExercise.targetWeight = apiExercise.targetWeight
+                    existingExercise.targetReps = apiExercise.targetReps
+                    existingExercise.notes = apiExercise.notes
+                    existingExercise.orderIndex = apiExercise.orderIndex
+                } else if let uuid = UUID(uuidString: apiExercise.id) {
+                    let workoutType = WorkoutType(rawValue: apiExercise.workoutType) ?? .a
+                    let newExercise = Exercise(
+                        name: apiExercise.name,
+                        targetWeight: apiExercise.targetWeight,
+                        targetReps: apiExercise.targetReps,
+                        notes: apiExercise.notes,
+                        workoutType: workoutType,
+                        orderIndex: apiExercise.orderIndex
+                    )
+                    newExercise.id = uuid
+                    modelContext.insert(newExercise)
+                }
+            }
+            
+            try? modelContext.save()
+            fetchExercises()
+        } catch {
+            syncError = error.localizedDescription
+        }
+        
+        isSyncing = false
     }
     
     func fetchExercises() {
@@ -74,6 +117,28 @@ class WorkoutViewModel {
         modelContext.insert(log)
         try? modelContext.save()
         fetchRecentLogs()
+        
+        Task {
+            await pushLogToAPI(log, exerciseId: exercise.id.uuidString)
+        }
+    }
+    
+    @MainActor
+    private func pushLogToAPI(_ log: WorkoutLog, exerciseId: String) async {
+        let request = CreateWorkoutLogRequest(
+            exerciseId: exerciseId,
+            date: ISO8601DateFormatter().string(from: log.date),
+            actualWeight: log.actualWeight,
+            actualReps: log.actualReps,
+            feeling: log.feeling,
+            notes: log.notes
+        )
+        
+        do {
+            _ = try await APIClient.shared.createLog(request)
+        } catch {
+            print("Failed to sync log to API: \(error.localizedDescription)")
+        }
     }
     
     func updateExerciseTarget(exercise: Exercise, weight: Double, reps: Int) {

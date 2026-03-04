@@ -4,12 +4,22 @@ import SwiftData
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: HistoryViewModel?
+    @State private var hasInitialSynced = false
     
     var body: some View {
         NavigationStack {
             Group {
                 if let viewModel = viewModel {
-                    if viewModel.logs.isEmpty {
+                    if viewModel.isSyncing && viewModel.logs.isEmpty {
+                        VStack(spacing: AppTheme.spacing) {
+                            ProgressView()
+                                .tint(AppTheme.accent)
+                            Text("Loading history...")
+                                .font(.subheadline)
+                                .foregroundStyle(AppTheme.textMuted)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if viewModel.logs.isEmpty {
                         emptyState
                     } else {
                         logsList(viewModel: viewModel)
@@ -21,12 +31,34 @@ struct HistoryView: View {
             .background(AppTheme.background)
             .navigationTitle("History")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        Task {
+                            await viewModel?.syncFromAPI()
+                        }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundStyle(AppTheme.accent)
+                    }
+                    .disabled(viewModel?.isSyncing ?? false)
+                }
+            }
+            .refreshable {
+                await viewModel?.syncFromAPI()
+            }
         }
         .onAppear {
             if viewModel == nil {
                 viewModel = HistoryViewModel(modelContext: modelContext)
             } else {
                 viewModel?.fetchLogs()
+            }
+        }
+        .task {
+            if !hasInitialSynced {
+                hasInitialSynced = true
+                await viewModel?.syncFromAPI()
             }
         }
     }
