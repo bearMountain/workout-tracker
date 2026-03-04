@@ -27,3 +27,4 @@ DerivedData/
 # Logs
 *.log
 npm-debug.log*
+.env*.local
