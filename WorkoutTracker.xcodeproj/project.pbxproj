@@ -25,6 +25,7 @@
 		VIW003 /* LogWorkoutSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC011 /* LogWorkoutSheet.swift */; };
 		VIW004 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC012 /* HistoryView.swift */; };
 		VIW005 /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC013 /* NotesView.swift */; };
+		VIW006 /* ExerciseEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC021 /* ExerciseEditorSheet.swift */; };
 		VWM001 /* WorkoutViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC007 /* WorkoutViewModel.swift */; };
 		VWM002 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC008 /* HistoryViewModel.swift */; };
 /* End PBXBuildFile section */
@@ -51,6 +52,7 @@
 		SRC017 /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
 		SRC018 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		SRC019 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
+		SRC021 /* ExerciseEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseEditorSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +124,7 @@
 				SRC009 /* HomeView.swift */,
 				SRC010 /* WorkoutDetailView.swift */,
 				SRC011 /* LogWorkoutSheet.swift */,
+				SRC021 /* ExerciseEditorSheet.swift */,
 				SRC012 /* HistoryView.swift */,
 				SRC013 /* NotesView.swift */,
 				GRP007 /* Components */,
@@ -245,6 +248,7 @@
 				VIW003 /* LogWorkoutSheet.swift in Sources */,
 				VIW004 /* HistoryView.swift in Sources */,
 				VIW005 /* NotesView.swift in Sources */,
+				VIW006 /* ExerciseEditorSheet.swift in Sources */,
 				CMP001 /* ExerciseRow.swift in Sources */,
 				CMP002 /* WorkoutCard.swift in Sources */,
 				THM001 /* AppTheme.swift in Sources */,

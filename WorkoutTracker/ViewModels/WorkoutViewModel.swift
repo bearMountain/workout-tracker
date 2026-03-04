@@ -147,4 +147,98 @@ class WorkoutViewModel {
         try? modelContext.save()
         fetchExercises()
     }
+    
+    // MARK: - Exercise CRUD
+    
+    func addExercise(name: String, targetWeight: Double, targetReps: Int, notes: String, workoutType: WorkoutType) {
+        let maxIndex = exercises.filter { $0.workoutType == workoutType }.map { $0.orderIndex }.max() ?? -1
+        let exercise = Exercise(
+            name: name,
+            targetWeight: targetWeight,
+            targetReps: targetReps,
+            notes: notes,
+            workoutType: workoutType,
+            orderIndex: maxIndex + 1
+        )
+        modelContext.insert(exercise)
+        try? modelContext.save()
+        fetchExercises()
+        
+        Task {
+            await pushExerciseToAPI(exercise)
+        }
+    }
+    
+    @MainActor
+    private func pushExerciseToAPI(_ exercise: Exercise) async {
+        let request = CreateExerciseRequest(
+            name: exercise.name,
+            targetWeight: exercise.targetWeight,
+            targetReps: exercise.targetReps,
+            notes: exercise.notes,
+            workoutType: exercise.workoutType.rawValue,
+            orderIndex: exercise.orderIndex
+        )
+        
+        do {
+            let apiExercise = try await APIClient.shared.createExercise(request)
+            if let uuid = UUID(uuidString: apiExercise.id) {
+                exercise.id = uuid
+                try? modelContext.save()
+            }
+        } catch {
+            print("Failed to sync exercise to API: \(error.localizedDescription)")
+        }
+    }
+    
+    func updateExercise(_ exercise: Exercise, name: String, targetWeight: Double, targetReps: Int, notes: String) {
+        exercise.name = name
+        exercise.targetWeight = targetWeight
+        exercise.targetReps = targetReps
+        exercise.notes = notes
+        try? modelContext.save()
+        fetchExercises()
+        
+        Task {
+            await pushExerciseUpdateToAPI(exercise)
+        }
+    }
+    
+    @MainActor
+    private func pushExerciseUpdateToAPI(_ exercise: Exercise) async {
+        let request = UpdateExerciseRequest(
+            name: exercise.name,
+            targetWeight: exercise.targetWeight,
+            targetReps: exercise.targetReps,
+            notes: exercise.notes,
+            workoutType: exercise.workoutType.rawValue,
+            orderIndex: exercise.orderIndex
+        )
+        
+        do {
+            _ = try await APIClient.shared.updateExercise(id: exercise.id.uuidString, request)
+        } catch {
+            print("Failed to update exercise on API: \(error.localizedDescription)")
+        }
+    }
+    
+    func deleteExercise(_ exercise: Exercise) {
+        let exerciseId = exercise.id.uuidString
+        modelContext.delete(exercise)
+        try? modelContext.save()
+        fetchExercises()
+        
+        Task {
+            await deleteExerciseFromAPI(exerciseId)
+        }
+    }
+    
+    @MainActor
+    private func deleteExerciseFromAPI(_ id: String) async {
+        do {
+            try await APIClient.shared.deleteExercise(id: id)
+        } catch {
+            print("Failed to delete exercise from API: \(error.localizedDescription)")
+        }
+    }
 }

@@ -7,6 +7,11 @@ struct WorkoutDetailView: View {
     
     @State private var selectedExercise: Exercise?
     @State private var showingLogSheet = false
+    @State private var showingAddSheet = false
+    @State private var showingEditSheet = false
+    @State private var exerciseToEdit: Exercise?
+    @State private var showingDeleteConfirmation = false
+    @State private var exerciseToDelete: Exercise?
     
     var exercises: [Exercise] {
         viewModel.exercises(for: workoutType)
@@ -28,11 +33,49 @@ struct WorkoutDetailView: View {
         .background(AppTheme.background)
         .navigationTitle(workoutType.displayName)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingAddSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundStyle(AppTheme.accent)
+                }
+            }
+        }
         .sheet(isPresented: $showingLogSheet) {
             if let exercise = selectedExercise {
                 LogWorkoutSheet(exercise: exercise, viewModel: viewModel) {
                     showingLogSheet = false
                 }
+            }
+        }
+        .sheet(isPresented: $showingAddSheet) {
+            ExerciseEditorSheet(workoutType: workoutType, viewModel: viewModel) {
+                showingAddSheet = false
+            }
+        }
+        .sheet(isPresented: $showingEditSheet) {
+            if let exercise = exerciseToEdit {
+                ExerciseEditorSheet(workoutType: workoutType, exercise: exercise, viewModel: viewModel) {
+                    showingEditSheet = false
+                    exerciseToEdit = nil
+                }
+            }
+        }
+        .alert("Delete Exercise?", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                exerciseToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let exercise = exerciseToDelete {
+                    viewModel.deleteExercise(exercise)
+                }
+                exerciseToDelete = nil
+            }
+        } message: {
+            if let exercise = exerciseToDelete {
+                Text("Are you sure you want to delete \"\(exercise.name)\"? This will also delete all logged workouts for this exercise.")
             }
         }
     }
@@ -81,6 +124,21 @@ struct WorkoutDetailView: View {
                 ExerciseRow(exercise: exercise) {
                     selectedExercise = exercise
                     showingLogSheet = true
+                }
+                .contextMenu {
+                    Button {
+                        exerciseToEdit = exercise
+                        showingEditSheet = true
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    
+                    Button(role: .destructive) {
+                        exerciseToDelete = exercise
+                        showingDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
             }
         }
