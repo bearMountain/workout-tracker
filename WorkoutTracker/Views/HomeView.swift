@@ -33,6 +33,7 @@ struct HomeView: View {
                     }
                     
                     statusSection
+                    BodyWeightCard()
                     workoutsSection
                 }
                 .padding()
@@ -136,5 +137,5 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
-        .modelContainer(for: [Exercise.self, WorkoutLog.self, ContentNote.self], inMemory: true)
+        .modelContainer(for: [Exercise.self, WorkoutLog.self, ContentNote.self, BodyWeightEntry.self], inMemory: true)
 }

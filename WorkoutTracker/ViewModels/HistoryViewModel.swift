@@ -2,12 +2,42 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+// MARK: - Grouped Data Structures
+
+struct ExerciseSets: Identifiable {
+    let id = UUID()
+    let exerciseName: String
+    let workoutType: WorkoutType
+    let targetWeight: Double
+    let targetReps: Int
+    let sets: [WorkoutLog]
+    
+    var metAllTargets: Bool {
+        sets.allSatisfy { $0.metTarget }
+    }
+}
+
+struct WorkoutSession: Identifiable {
+    let id = UUID()
+    let date: Date
+    let workoutType: WorkoutType?
+    let exercises: [ExerciseSets]
+    
+    var formattedDate: String {
+        date.formatted(date: .complete, time: .omitted)
+    }
+    
+    var totalSets: Int {
+        exercises.reduce(0) { $0 + $1.sets.count }
+    }
+}
+
 @Observable
 class HistoryViewModel {
     private var modelContext: ModelContext
     
     var logs: [WorkoutLog] = []
-    var groupedLogs: [Date: [WorkoutLog]] = [:]
+    var sessions: [WorkoutSession] = []
     var isSyncing = false
     var syncError: String?
     
@@ -65,21 +95,44 @@ class HistoryViewModel {
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
         logs = (try? modelContext.fetch(descriptor)) ?? []
-        groupLogsByDate()
+        buildSessions()
     }
     
-    private func groupLogsByDate() {
-        groupedLogs = Dictionary(grouping: logs) { log in
-            Calendar.current.startOfDay(for: log.date)
+    private func buildSessions() {
+        let calendar = Calendar.current
+        
+        let groupedByDate = Dictionary(grouping: logs) { log in
+            calendar.startOfDay(for: log.date)
         }
-    }
-    
-    var sortedDates: [Date] {
-        groupedLogs.keys.sorted(by: >)
-    }
-    
-    func logs(for date: Date) -> [WorkoutLog] {
-        groupedLogs[date] ?? []
+        
+        sessions = groupedByDate.map { (date, logsForDate) in
+            let groupedByExercise = Dictionary(grouping: logsForDate) { log in
+                log.exercise?.id ?? UUID()
+            }
+            
+            let exerciseSets = groupedByExercise.compactMap { (_, exerciseLogs) -> ExerciseSets? in
+                guard let firstLog = exerciseLogs.first,
+                      let exercise = firstLog.exercise else { return nil }
+                
+                let sortedSets = exerciseLogs.sorted { $0.date < $1.date }
+                
+                return ExerciseSets(
+                    exerciseName: exercise.name,
+                    workoutType: exercise.workoutType,
+                    targetWeight: exercise.targetWeight,
+                    targetReps: exercise.targetReps,
+                    sets: sortedSets
+                )
+            }.sorted { $0.exerciseName < $1.exerciseName }
+            
+            let workoutType = exerciseSets.first?.workoutType
+            
+            return WorkoutSession(
+                date: date,
+                workoutType: workoutType,
+                exercises: exerciseSets
+            )
+        }.sorted { $0.date > $1.date }
     }
     
     func deleteLog(_ log: WorkoutLog) {

@@ -84,18 +84,10 @@ struct HistoryView: View {
     private func logsList(viewModel: HistoryViewModel) -> some View {
         ScrollView {
             LazyVStack(spacing: AppTheme.spacingLarge) {
-                ForEach(viewModel.sortedDates, id: \.self) { date in
-                    VStack(alignment: .leading, spacing: AppTheme.spacing) {
-                        Text(date.formatted(date: .complete, time: .omitted))
-                            .font(.headline)
-                            .foregroundStyle(AppTheme.textPrimary)
-                        
-                        ForEach(viewModel.logs(for: date)) { log in
-                            LogRow(log: log) {
-                                viewModel.deleteLog(log)
-                            }
-                        }
-                    }
+                ForEach(viewModel.sessions) { session in
+                    SessionCard(session: session, onDeleteLog: { log in
+                        viewModel.deleteLog(log)
+                    })
                 }
             }
             .padding()
@@ -103,63 +95,102 @@ struct HistoryView: View {
     }
 }
 
-struct LogRow: View {
-    let log: WorkoutLog
-    let onDelete: () -> Void
+struct SessionCard: View {
+    let session: WorkoutSession
+    let onDeleteLog: (WorkoutLog) -> Void
     
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                if let exercise = log.exercise {
-                    Text(exercise.name)
-                        .font(.headline)
-                        .foregroundStyle(AppTheme.textPrimary)
-                    
-                    HStack(spacing: 8) {
-                        Text(exercise.workoutType.displayName)
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.accent)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(AppTheme.accent.opacity(0.2))
-                            .clipShape(Capsule())
-                    }
-                }
-                
-                HStack(spacing: 12) {
-                    Label("\(Int(log.actualWeight)) lbs", systemImage: "scalemass")
-                    Label("\(log.actualReps) reps", systemImage: "repeat")
-                }
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.textSecondary)
-                
-                if !log.notes.isEmpty {
-                    Text(log.notes)
-                        .font(.caption)
-                        .foregroundStyle(AppTheme.textMuted)
-                        .lineLimit(2)
-                }
-            }
+        VStack(alignment: .leading, spacing: AppTheme.spacing) {
+            headerSection
             
-            Spacer()
-            
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(log.feelingEmoji)
-                    .font(.title2)
-                
-                if log.metTarget {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(AppTheme.success)
-                }
+            ForEach(session.exercises) { exerciseSets in
+                ExerciseSetsRow(exerciseSets: exerciseSets, onDeleteLog: onDeleteLog)
             }
         }
         .cardStyle()
-        .contextMenu {
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Label("Delete", systemImage: "trash")
+    }
+    
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(session.formattedDate)
+                .font(.headline)
+                .foregroundStyle(AppTheme.textPrimary)
+            
+            HStack(spacing: 8) {
+                if let workoutType = session.workoutType {
+                    Text(workoutType.displayName)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(AppTheme.accent)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(AppTheme.accent.opacity(0.2))
+                        .clipShape(Capsule())
+                }
+                
+                Text("\(session.exercises.count) exercises · \(session.totalSets) sets")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textMuted)
             }
+        }
+    }
+}
+
+struct ExerciseSetsRow: View {
+    let exerciseSets: ExerciseSets
+    let onDeleteLog: (WorkoutLog) -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(exerciseSets.exerciseName)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(AppTheme.textPrimary)
+                
+                Spacer()
+                
+                Text("Target: \(Int(exerciseSets.targetWeight))×\(exerciseSets.targetReps)")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textMuted)
+            }
+            
+            VStack(spacing: 4) {
+                ForEach(Array(exerciseSets.sets.enumerated()), id: \.element.id) { index, log in
+                    HStack(spacing: 8) {
+                        Text("Set \(index + 1)")
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.textMuted)
+                            .frame(width: 40, alignment: .leading)
+                        
+                        Text("\(Int(log.actualWeight)) × \(log.actualReps)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(log.metTarget ? AppTheme.success : AppTheme.textSecondary)
+                        
+                        Text(log.feelingEmoji)
+                            .font(.caption)
+                        
+                        if log.metTarget {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.success)
+                        }
+                        
+                        Spacer()
+                    }
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            onDeleteLog(log)
+                        } label: {
+                            Label("Delete Set", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+            .padding(8)
+            .background(AppTheme.cardBorder.opacity(0.3))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
         }
     }
 }

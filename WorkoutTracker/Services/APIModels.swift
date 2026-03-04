@@ -1,9 +1,12 @@
-// Generated from lib/types.ts using quicktype, then enhanced with Codable
-// Regenerate base types: npm run generate:swift
-
 import Foundation
 
-// MARK: - API Response Types
+// MARK: - API Error
+
+struct APIError: Codable {
+    let error: String
+}
+
+// MARK: - Exercise
 
 struct APIExercise: Codable {
     let id: String
@@ -26,6 +29,42 @@ struct APIExercise: Codable {
         case updatedAt = "updated_at"
     }
 }
+
+struct CreateExerciseRequest: Codable {
+    let name: String
+    let targetWeight: Double
+    let targetReps: Int
+    let notes: String
+    let workoutType: String
+    let orderIndex: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case name, notes
+        case targetWeight = "target_weight"
+        case targetReps = "target_reps"
+        case workoutType = "workout_type"
+        case orderIndex = "order_index"
+    }
+}
+
+struct UpdateExerciseRequest: Codable {
+    let name: String?
+    let targetWeight: Double?
+    let targetReps: Int?
+    let notes: String?
+    let workoutType: String?
+    let orderIndex: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case name, notes
+        case targetWeight = "target_weight"
+        case targetReps = "target_reps"
+        case workoutType = "workout_type"
+        case orderIndex = "order_index"
+    }
+}
+
+// MARK: - Workout Log
 
 struct APIWorkoutLog: Codable {
     let id: String
@@ -50,6 +89,38 @@ struct APIWorkoutLog: Codable {
     }
 }
 
+struct CreateWorkoutLogRequest: Codable {
+    let exerciseId: String
+    let date: String?
+    let actualWeight: Double
+    let actualReps: Int
+    let feeling: Int
+    let notes: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case date, notes, feeling
+        case exerciseId = "exercise_id"
+        case actualWeight = "actual_weight"
+        case actualReps = "actual_reps"
+    }
+}
+
+struct UpdateWorkoutLogRequest: Codable {
+    let date: String?
+    let actualWeight: Double?
+    let actualReps: Int?
+    let feeling: Int?
+    let notes: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case date, notes, feeling
+        case actualWeight = "actual_weight"
+        case actualReps = "actual_reps"
+    }
+}
+
+// MARK: - Content Note
+
 struct APIContentNote: Codable {
     let id: String
     let title: String
@@ -65,76 +136,10 @@ struct APIContentNote: Codable {
     }
 }
 
-// MARK: - API Request Types
-
-struct CreateExerciseRequest: Codable {
-    let name: String
-    let targetWeight: Double
-    let targetReps: Int
-    let notes: String?
-    let workoutType: String
-    let orderIndex: Int?
-    
-    enum CodingKeys: String, CodingKey {
-        case name, notes
-        case targetWeight = "target_weight"
-        case targetReps = "target_reps"
-        case workoutType = "workout_type"
-        case orderIndex = "order_index"
-    }
-}
-
-struct CreateWorkoutLogRequest: Codable {
-    let exerciseId: String
-    let date: String?
-    let actualWeight: Double
-    let actualReps: Int
-    let feeling: Int
-    let notes: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case date, feeling, notes
-        case exerciseId = "exercise_id"
-        case actualWeight = "actual_weight"
-        case actualReps = "actual_reps"
-    }
-}
-
 struct CreateContentNoteRequest: Codable {
     let title: String
     let body: String?
     let url: String?
-}
-
-struct UpdateExerciseRequest: Codable {
-    let name: String?
-    let targetWeight: Double?
-    let targetReps: Int?
-    let notes: String?
-    let workoutType: String?
-    let orderIndex: Int?
-    
-    enum CodingKeys: String, CodingKey {
-        case name, notes
-        case targetWeight = "target_weight"
-        case targetReps = "target_reps"
-        case workoutType = "workout_type"
-        case orderIndex = "order_index"
-    }
-}
-
-struct UpdateWorkoutLogRequest: Codable {
-    let date: String?
-    let actualWeight: Double?
-    let actualReps: Int?
-    let feeling: Int?
-    let notes: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case date, feeling, notes
-        case actualWeight = "actual_weight"
-        case actualReps = "actual_reps"
-    }
 }
 
 struct UpdateContentNoteRequest: Codable {
@@ -143,8 +148,29 @@ struct UpdateContentNoteRequest: Codable {
     let url: String?
 }
 
-// MARK: - API Error Response
+// MARK: - Body Weight
 
-struct APIError: Codable, Error {
-    let error: String
+struct APIBodyWeight: Codable {
+    let id: String
+    let date: String
+    let weight: Double
+    let notes: String
+    let createdAt: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id, date, weight, notes
+        case createdAt = "created_at"
+    }
+}
+
+struct CreateBodyWeightRequest: Codable {
+    let date: String?
+    let weight: Double
+    let notes: String?
+}
+
+struct UpdateBodyWeightRequest: Codable {
+    let date: String?
+    let weight: Double?
+    let notes: String?
 }

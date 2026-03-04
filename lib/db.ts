@@ -52,6 +52,20 @@ export async function initializeDatabase() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_workout_logs_date ON workout_logs(date DESC)
   `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS body_weights (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      date TIMESTAMP WITH TIME ZONE NOT NULL,
+      weight DECIMAL(10, 2) NOT NULL,
+      notes TEXT DEFAULT '',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_body_weights_date ON body_weights(date DESC)
+  `;
 }
 
 export function formatResponse<T>(data: T, status = 200) {
@@ -84,5 +98,12 @@ export function normalizeWorkoutLog(row: Record<string, unknown>) {
     actual_weight: Number(row.actual_weight),
     actual_reps: Number(row.actual_reps),
     feeling: Number(row.feeling),
+  };
+}
+
+export function normalizeBodyWeight(row: Record<string, unknown>) {
+  return {
+    ...row,
+    weight: Number(row.weight),
   };
 }

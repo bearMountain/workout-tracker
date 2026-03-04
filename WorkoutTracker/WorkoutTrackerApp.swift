@@ -7,7 +7,8 @@ struct WorkoutTrackerApp: App {
         let schema = Schema([
             Exercise.self,
             WorkoutLog.self,
-            ContentNote.self
+            ContentNote.self,
+            BodyWeightEntry.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

@@ -114,6 +114,28 @@ actor APIClient {
         try await delete("\(baseURL)/api/notes/\(id)")
     }
     
+    // MARK: - Body Weights
+    
+    func fetchBodyWeights(limit: Int = 50) async throws -> [APIBodyWeight] {
+        return try await get("\(baseURL)/api/body-weights?limit=\(limit)")
+    }
+    
+    func fetchBodyWeight(id: String) async throws -> APIBodyWeight {
+        return try await get("\(baseURL)/api/body-weights/\(id)")
+    }
+    
+    func createBodyWeight(_ input: CreateBodyWeightRequest) async throws -> APIBodyWeight {
+        return try await post("\(baseURL)/api/body-weights", body: input)
+    }
+    
+    func updateBodyWeight(id: String, _ input: UpdateBodyWeightRequest) async throws -> APIBodyWeight {
+        return try await put("\(baseURL)/api/body-weights/\(id)", body: input)
+    }
+    
+    func deleteBodyWeight(id: String) async throws {
+        try await delete("\(baseURL)/api/body-weights/\(id)")
+    }
+    
     // MARK: - Private Helpers
     
     private func get<T: Decodable>(_ urlString: String) async throws -> T {

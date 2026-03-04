@@ -78,3 +78,23 @@ export interface UpdateContentNoteInput {
   body?: string;
   url?: string;
 }
+
+export interface BodyWeight {
+  id: string;
+  date: string;
+  weight: number;
+  notes: string;
+  created_at: string;
+}
+
+export interface CreateBodyWeightInput {
+  date?: string;
+  weight: number;
+  notes?: string;
+}
+
+export interface UpdateBodyWeightInput {
+  date?: string;
+  weight?: number;
+  notes?: string;
+}

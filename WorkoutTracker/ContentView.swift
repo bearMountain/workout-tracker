@@ -24,6 +24,12 @@ struct ContentView: View {
                     Label("Notes", systemImage: "note.text")
                 }
                 .tag(2)
+            
+            ProgressView()
+                .tabItem {
+                    Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
+                }
+                .tag(3)
         }
         .tint(AppTheme.accent)
         .onAppear {
@@ -43,5 +49,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Exercise.self, WorkoutLog.self, ContentNote.self], inMemory: true)
+        .modelContainer(for: [Exercise.self, WorkoutLog.self, ContentNote.self, BodyWeightEntry.self], inMemory: true)
 }

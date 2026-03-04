@@ -41,6 +41,15 @@ final class Exercise {
         logs?.sorted { ($0.date) > ($1.date) }.first
     }
     
+    var todaysLogs: [WorkoutLog] {
+        guard let logs = logs else { return [] }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return logs
+            .filter { calendar.isDate($0.date, inSameDayAs: today) }
+            .sorted { $0.date < $1.date }
+    }
+    
     var hasImproved: Bool {
         guard let logs = logs, logs.count >= 2 else { return false }
         let sorted = logs.sorted { $0.date > $1.date }

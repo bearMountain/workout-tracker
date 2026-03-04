@@ -16,6 +16,13 @@ enum AppTheme {
     static let warning = Color(red: 0.95, green: 0.7, blue: 0.3)
     static let danger = Color(red: 0.9, green: 0.3, blue: 0.3)
     
+    static let gold = Color(red: 1.0, green: 0.84, blue: 0.0)
+    static let progressGradient = LinearGradient(
+        colors: [Color(red: 0.46, green: 0.82, blue: 0.46), Color(red: 0.3, green: 0.7, blue: 0.5)],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+    
     static let cornerRadius: CGFloat = 12
     static let cardPadding: CGFloat = 16
     static let spacing: CGFloat = 12
