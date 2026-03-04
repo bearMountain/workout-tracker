@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct LogWorkoutSheet: View {
     let exercise: Exercise
@@ -209,7 +210,7 @@ struct LogWorkoutSheet: View {
         workoutType: .a
     )
     
-    return LogWorkoutSheet(
+    LogWorkoutSheet(
         exercise: exercise,
         viewModel: WorkoutViewModel(modelContext: try! ModelContainer(for: Exercise.self, WorkoutLog.self).mainContext)
     ) {}

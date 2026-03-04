@@ -157,14 +157,14 @@ struct NoteEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var title: String
-    @State private var body: String
+    @State private var noteBody: String
     @State private var urlString: String
     
     init(note: ContentNote?, onSave: @escaping (String, String, String) -> Void) {
         self.note = note
         self.onSave = onSave
         _title = State(initialValue: note?.title ?? "")
-        _body = State(initialValue: note?.body ?? "")
+        _noteBody = State(initialValue: note?.body ?? "")
         _urlString = State(initialValue: note?.urlString ?? "")
     }
     
@@ -192,7 +192,7 @@ struct NoteEditorSheet: View {
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                     
-                    TextField("Write your notes here...", text: $body, axis: .vertical)
+                    TextField("Write your notes here...", text: $noteBody, axis: .vertical)
                         .textFieldStyle(.plain)
                         .font(.body)
                         .foregroundStyle(AppTheme.textPrimary)
@@ -229,7 +229,7 @@ struct NoteEditorSheet: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
-                    onSave(title, body, urlString)
+                    onSave(title, noteBody, urlString)
                     dismiss()
                 }
                 .fontWeight(.semibold)
