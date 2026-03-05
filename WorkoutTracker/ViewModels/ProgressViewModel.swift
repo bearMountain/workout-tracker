@@ -148,6 +148,10 @@ class ProgressViewModel {
         bodyWeightEntries.first
     }
     
+    var bodyWeightEntryCount: Int {
+        bodyWeightEntries.count
+    }
+    
     var bodyWeightTrend: Double? {
         let data = bodyWeightChartData
         guard data.count >= 2 else { return nil }

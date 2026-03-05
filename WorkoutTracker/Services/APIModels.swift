@@ -174,3 +174,5 @@ struct UpdateBodyWeightRequest: Codable {
     let weight: Double?
     let notes: String?
 }
+
+

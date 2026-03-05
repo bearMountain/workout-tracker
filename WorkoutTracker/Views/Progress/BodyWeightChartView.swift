@@ -7,7 +7,18 @@ struct BodyWeightChartView: View {
     let trend: Double?
     let lowestWeight: Double?
     let highestWeight: Double?
+    let entryCount: Int
     let motivationalMessage: String?
+    
+    private var yAxisDomain: ClosedRange<Double> {
+        guard !data.isEmpty else { return 0...100 }
+        let weights = data.map(\.weight)
+        let minWeight = weights.min() ?? 0
+        let maxWeight = weights.max() ?? 100
+        let range = maxWeight - minWeight
+        let padding = max(range * 0.2, 2)
+        return (minWeight - padding)...(maxWeight + padding)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
@@ -126,6 +137,7 @@ struct BodyWeightChartView: View {
                     .foregroundStyle(AppTheme.textSecondary)
             }
         }
+        .chartYScale(domain: yAxisDomain)
         .frame(height: 200)
     }
     
@@ -152,7 +164,7 @@ struct BodyWeightChartView: View {
                 
                 statItem(
                     title: "Entries",
-                    value: "\(data.count)",
+                    value: "\(entryCount)",
                     icon: "calendar",
                     color: AppTheme.textSecondary
                 )
@@ -205,6 +217,7 @@ struct BodyWeightChartView: View {
             trend: -3.8,
             lowestWeight: 178,
             highestWeight: 185,
+            entryCount: 5,
             motivationalMessage: "Making progress!"
         )
         .padding()

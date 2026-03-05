@@ -157,6 +157,7 @@ struct ProgressTabView: View {
                 trend: viewModel.bodyWeightTrend,
                 lowestWeight: viewModel.lowestBodyWeight,
                 highestWeight: viewModel.highestBodyWeight,
+                entryCount: viewModel.bodyWeightEntryCount,
                 motivationalMessage: viewModel.bodyWeightMotivationalMessage
             )
         }

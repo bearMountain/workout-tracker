@@ -10,6 +10,16 @@ struct ExerciseChartView: View {
     let repsTrend: Double?
     let motivationalMessage: String?
     
+    private var yAxisDomain: ClosedRange<Double> {
+        guard !data.isEmpty else { return 0...100 }
+        let weights = data.map(\.weight)
+        let minWeight = weights.min() ?? 0
+        let maxWeight = weights.max() ?? 100
+        let range = maxWeight - minWeight
+        let padding = max(range * 0.2, 5)
+        return max(0, minWeight - padding)...(maxWeight + padding)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             headerSection
@@ -131,6 +141,7 @@ struct ExerciseChartView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                 }
             }
+            .chartYScale(domain: yAxisDomain)
             .frame(height: 200)
             
             Text("Weight (lbs)")
