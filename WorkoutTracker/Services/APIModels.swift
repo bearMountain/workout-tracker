@@ -40,7 +40,7 @@ struct CreateExerciseRequest: Codable {
     let orderIndex: Int
     
     enum CodingKeys: String, CodingKey {
-        case name, notes
+        case id, name, notes
         case targetWeight = "target_weight"
         case targetReps = "target_reps"
         case workoutType = "workout_type"
@@ -100,7 +100,7 @@ struct CreateWorkoutLogRequest: Codable {
     let notes: String?
     
     enum CodingKeys: String, CodingKey {
-        case date, notes, feeling
+        case id, date, notes, feeling
         case exerciseId = "exercise_id"
         case actualWeight = "actual_weight"
         case actualReps = "actual_reps"
@@ -177,5 +177,6 @@ struct UpdateBodyWeightRequest: Codable {
     let weight: Double?
     let notes: String?
 }
+
 
 

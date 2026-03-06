@@ -64,9 +64,7 @@ class HistoryViewModel {
                 
                 if !logExists, let uuid = UUID(uuidString: apiLog.id) {
                     let exercise = exercises.first { $0.id.uuidString == apiLog.exerciseId }
-                    
-                    let dateFormatter = ISO8601DateFormatter()
-                    let date = dateFormatter.date(from: apiLog.date) ?? Date()
+                    let date = APIClient.dateFormatter.date(from: apiLog.date) ?? Date()
                     
                     let newLog = WorkoutLog(
                         date: date,

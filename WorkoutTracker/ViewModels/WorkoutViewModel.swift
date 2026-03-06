@@ -128,7 +128,7 @@ class WorkoutViewModel {
         let request = CreateWorkoutLogRequest(
             id: log.id.uuidString,
             exerciseId: exerciseId,
-            date: ISO8601DateFormatter().string(from: log.date),
+            date: APIClient.dateFormatter.string(from: log.date),
             actualWeight: log.actualWeight,
             actualReps: log.actualReps,
             feeling: log.feeling,

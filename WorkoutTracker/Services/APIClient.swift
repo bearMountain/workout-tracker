@@ -26,6 +26,12 @@ enum APIClientError: Error, LocalizedError {
 actor APIClient {
     static let shared = APIClient()
     
+    static let dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+    
     private let baseURL = "https://workout-tracker-jim-brews-projects.vercel.app"
     private let session: URLSession
     private let decoder: JSONDecoder

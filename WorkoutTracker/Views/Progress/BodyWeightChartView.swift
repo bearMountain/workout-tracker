@@ -10,6 +10,15 @@ struct BodyWeightChartView: View {
     let entryCount: Int
     let motivationalMessage: String?
     
+    private var xAxisDomain: ClosedRange<Date> {
+        guard let first = data.first?.date, let last = data.last?.date else {
+            return Date()...Date()
+        }
+        let totalSpan = last.timeIntervalSince(first)
+        let padding = max(totalSpan * 0.08, 3600)
+        return first.addingTimeInterval(-padding)...last.addingTimeInterval(padding)
+    }
+    
     private var yAxisDomain: ClosedRange<Double> {
         guard !data.isEmpty else { return 0...100 }
         let weights = data.map(\.weight)
@@ -89,6 +98,16 @@ struct BodyWeightChartView: View {
         .frame(height: 200)
     }
     
+    private var uniqueDates: [Date] {
+        var seen = Set<String>()
+        return data.compactMap { point -> Date? in
+            let key = point.date.formatted(.dateTime.month().day())
+            if seen.contains(key) { return nil }
+            seen.insert(key)
+            return point.date
+        }
+    }
+    
     private var chartSection: some View {
         Chart {
             ForEach(data) { point in
@@ -100,19 +119,6 @@ struct BodyWeightChartView: View {
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 2.5))
                 
-                AreaMark(
-                    x: .value("Date", point.date),
-                    y: .value("Weight", point.weight)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [AppTheme.accentSecondary.opacity(0.3), AppTheme.accentSecondary.opacity(0.05)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .interpolationMethod(.catmullRom)
-                
                 PointMark(
                     x: .value("Date", point.date),
                     y: .value("Weight", point.weight)
@@ -122,11 +128,12 @@ struct BodyWeightChartView: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 4)) { value in
+            AxisMarks(values: uniqueDates) { _ in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
                     .foregroundStyle(AppTheme.cardBorder)
-                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                AxisValueLabel(format: .dateTime.month(.defaultDigits).day())
                     .foregroundStyle(AppTheme.textSecondary)
+                    .offset(x: -12)
             }
         }
         .chartYAxis {
@@ -138,6 +145,7 @@ struct BodyWeightChartView: View {
             }
         }
         .chartYScale(domain: yAxisDomain)
+        .chartXScale(domain: xAxisDomain)
         .frame(height: 200)
     }
     

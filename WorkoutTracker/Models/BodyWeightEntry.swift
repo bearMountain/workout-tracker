@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class BodyWeightEntry {
-    var id: UUID
+    @Attribute(.unique) var id: UUID
     var date: Date
     var weight: Double
     var notes: String

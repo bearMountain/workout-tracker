@@ -183,7 +183,7 @@ struct AddBodyWeightSheet: View {
     private func pushToAPI(_ entry: BodyWeightEntry) async {
         let request = CreateBodyWeightRequest(
             id: entry.id.uuidString,
-            date: ISO8601DateFormatter().string(from: entry.date),
+            date: APIClient.dateFormatter.string(from: entry.date),
             weight: entry.weight,
             notes: entry.notes.isEmpty ? nil : entry.notes
         )
