@@ -39,18 +39,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'workout_type must be A or B' });
       }
 
-      const result = await sql<Exercise>`
-        INSERT INTO exercises (name, target_weight, target_reps, notes, workout_type, order_index)
-        VALUES (
-          ${body.name},
-          ${body.target_weight || 0},
-          ${body.target_reps || 0},
-          ${body.notes || ''},
-          ${body.workout_type},
-          ${body.order_index || 0}
-        )
-        RETURNING *
-      `;
+      let result;
+      if (body.id) {
+        result = await sql<Exercise>`
+          INSERT INTO exercises (id, name, target_weight, target_reps, notes, workout_type, order_index)
+          VALUES (
+            ${body.id},
+            ${body.name},
+            ${body.target_weight || 0},
+            ${body.target_reps || 0},
+            ${body.notes || ''},
+            ${body.workout_type},
+            ${body.order_index || 0}
+          )
+          ON CONFLICT (id) DO UPDATE SET
+            name = EXCLUDED.name,
+            target_weight = EXCLUDED.target_weight,
+            target_reps = EXCLUDED.target_reps,
+            notes = EXCLUDED.notes,
+            workout_type = EXCLUDED.workout_type,
+            order_index = EXCLUDED.order_index,
+            updated_at = CURRENT_TIMESTAMP
+          RETURNING *
+        `;
+      } else {
+        result = await sql<Exercise>`
+          INSERT INTO exercises (name, target_weight, target_reps, notes, workout_type, order_index)
+          VALUES (
+            ${body.name},
+            ${body.target_weight || 0},
+            ${body.target_reps || 0},
+            ${body.notes || ''},
+            ${body.workout_type},
+            ${body.order_index || 0}
+          )
+          RETURNING *
+        `;
+      }
 
       return res.status(201).json(normalizeExercise(result.rows[0]));
     }

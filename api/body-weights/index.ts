@@ -35,15 +35,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'weight must be positive' });
       }
 
-      const result = await sql<BodyWeight>`
-        INSERT INTO body_weights (date, weight, notes)
-        VALUES (
-          ${body.date || new Date().toISOString()},
-          ${body.weight},
-          ${body.notes || ''}
-        )
-        RETURNING *
-      `;
+      let result;
+      if (body.id) {
+        result = await sql<BodyWeight>`
+          INSERT INTO body_weights (id, date, weight, notes)
+          VALUES (
+            ${body.id},
+            ${body.date || new Date().toISOString()},
+            ${body.weight},
+            ${body.notes || ''}
+          )
+          ON CONFLICT (id) DO UPDATE SET
+            date = EXCLUDED.date,
+            weight = EXCLUDED.weight,
+            notes = EXCLUDED.notes
+          RETURNING *
+        `;
+      } else {
+        result = await sql<BodyWeight>`
+          INSERT INTO body_weights (date, weight, notes)
+          VALUES (
+            ${body.date || new Date().toISOString()},
+            ${body.weight},
+            ${body.notes || ''}
+          )
+          RETURNING *
+        `;
+      }
 
       return res.status(201).json(normalizeBodyWeight(result.rows[0]));
     }

@@ -126,10 +126,10 @@ struct ExerciseChartView: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .automatic) { _ in
+                AxisMarks(values: .automatic(desiredCount: 4)) { value in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
                         .foregroundStyle(AppTheme.cardBorder)
-                    AxisValueLabel()
+                    AxisValueLabel(format: .dateTime.month(.abbreviated).day())
                         .foregroundStyle(AppTheme.textSecondary)
                 }
             }

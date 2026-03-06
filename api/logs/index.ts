@@ -59,18 +59,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Exercise not found' });
       }
 
-      const result = await sql<WorkoutLog>`
-        INSERT INTO workout_logs (exercise_id, date, actual_weight, actual_reps, feeling, notes)
-        VALUES (
-          ${body.exercise_id},
-          ${body.date || new Date().toISOString()},
-          ${body.actual_weight},
-          ${body.actual_reps},
-          ${body.feeling},
-          ${body.notes || ''}
-        )
-        RETURNING *
-      `;
+      let result;
+      if (body.id) {
+        result = await sql<WorkoutLog>`
+          INSERT INTO workout_logs (id, exercise_id, date, actual_weight, actual_reps, feeling, notes)
+          VALUES (
+            ${body.id},
+            ${body.exercise_id},
+            ${body.date || new Date().toISOString()},
+            ${body.actual_weight},
+            ${body.actual_reps},
+            ${body.feeling},
+            ${body.notes || ''}
+          )
+          ON CONFLICT (id) DO UPDATE SET
+            exercise_id = EXCLUDED.exercise_id,
+            date = EXCLUDED.date,
+            actual_weight = EXCLUDED.actual_weight,
+            actual_reps = EXCLUDED.actual_reps,
+            feeling = EXCLUDED.feeling,
+            notes = EXCLUDED.notes
+          RETURNING *
+        `;
+      } else {
+        result = await sql<WorkoutLog>`
+          INSERT INTO workout_logs (exercise_id, date, actual_weight, actual_reps, feeling, notes)
+          VALUES (
+            ${body.exercise_id},
+            ${body.date || new Date().toISOString()},
+            ${body.actual_weight},
+            ${body.actual_reps},
+            ${body.feeling},
+            ${body.notes || ''}
+          )
+          RETURNING *
+        `;
+      }
 
       return res.status(201).json(normalizeWorkoutLog(result.rows[0]));
     }

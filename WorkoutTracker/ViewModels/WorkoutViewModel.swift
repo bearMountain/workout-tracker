@@ -126,6 +126,7 @@ class WorkoutViewModel {
     @MainActor
     private func pushLogToAPI(_ log: WorkoutLog, exerciseId: String) async {
         let request = CreateWorkoutLogRequest(
+            id: log.id.uuidString,
             exerciseId: exerciseId,
             date: ISO8601DateFormatter().string(from: log.date),
             actualWeight: log.actualWeight,
@@ -172,6 +173,7 @@ class WorkoutViewModel {
     @MainActor
     private func pushExerciseToAPI(_ exercise: Exercise) async {
         let request = CreateExerciseRequest(
+            id: exercise.id.uuidString,
             name: exercise.name,
             targetWeight: exercise.targetWeight,
             targetReps: exercise.targetReps,
@@ -179,13 +181,9 @@ class WorkoutViewModel {
             workoutType: exercise.workoutType.rawValue,
             orderIndex: exercise.orderIndex
         )
-        
+
         do {
-            let apiExercise = try await APIClient.shared.createExercise(request)
-            if let uuid = UUID(uuidString: apiExercise.id) {
-                exercise.id = uuid
-                try? modelContext.save()
-            }
+            _ = try await APIClient.shared.createExercise(request)
         } catch {
             print("Failed to sync exercise to API: \(error.localizedDescription)")
         }

@@ -34,7 +34,9 @@ struct ProgressTabView: View {
             .navigationTitle("Progress")
             .onAppear {
                 if viewModel == nil {
-                    viewModel = ProgressViewModel(modelContext: modelContext)
+                    let vm = ProgressViewModel(modelContext: modelContext)
+                    vm.deduplicateBodyWeightEntries()
+                    viewModel = vm
                 }
             }
         }

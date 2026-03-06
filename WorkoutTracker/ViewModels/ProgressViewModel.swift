@@ -193,6 +193,33 @@ class ProgressViewModel {
         }
     }
     
+    func deduplicateBodyWeightEntries() {
+        var seen: [(date: Date, weight: Double)] = []
+        var toDelete: [BodyWeightEntry] = []
+        
+        let sorted = bodyWeightEntries.sorted { $0.date > $1.date }
+        
+        for entry in sorted {
+            let isDuplicate = seen.contains { existing in
+                abs(existing.date.timeIntervalSince(entry.date)) < 60 &&
+                abs(existing.weight - entry.weight) < 0.01
+            }
+            
+            if isDuplicate {
+                toDelete.append(entry)
+            } else {
+                seen.append((entry.date, entry.weight))
+            }
+        }
+        
+        for entry in toDelete {
+            modelContext.delete(entry)
+        }
+        
+        try? modelContext.save()
+        fetchBodyWeightEntries()
+    }
+    
     // MARK: - API Sync
     
     @MainActor
@@ -202,11 +229,16 @@ class ProgressViewModel {
         
         do {
             let apiWeights = try await APIClient.shared.fetchBodyWeights()
+            let formatter = ISO8601DateFormatter()
             
             for apiWeight in apiWeights {
-                let existingEntry = bodyWeightEntries.first { $0.id.uuidString == apiWeight.id }
-                if existingEntry == nil, let uuid = UUID(uuidString: apiWeight.id) {
-                    let formatter = ISO8601DateFormatter()
+                guard let uuid = UUID(uuidString: apiWeight.id) else { continue }
+                
+                if let existing = bodyWeightEntries.first(where: { $0.id == uuid }) {
+                    existing.weight = apiWeight.weight
+                    existing.notes = apiWeight.notes
+                    existing.date = formatter.date(from: apiWeight.date) ?? existing.date
+                } else {
                     let date = formatter.date(from: apiWeight.date) ?? Date()
                     let entry = BodyWeightEntry(date: date, weight: apiWeight.weight, notes: apiWeight.notes)
                     entry.id = uuid
@@ -226,17 +258,14 @@ class ProgressViewModel {
     @MainActor
     private func pushBodyWeightToAPI(_ entry: BodyWeightEntry) async {
         let request = CreateBodyWeightRequest(
+            id: entry.id.uuidString,
             date: ISO8601DateFormatter().string(from: entry.date),
             weight: entry.weight,
             notes: entry.notes
         )
         
         do {
-            let apiEntry = try await APIClient.shared.createBodyWeight(request)
-            if let uuid = UUID(uuidString: apiEntry.id) {
-                entry.id = uuid
-                try? modelContext.save()
-            }
+            _ = try await APIClient.shared.createBodyWeight(request)
         } catch {
             print("Failed to sync body weight to API: \(error.localizedDescription)")
         }

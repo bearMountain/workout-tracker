@@ -13,6 +13,7 @@ export interface Exercise {
 }
 
 export interface CreateExerciseInput {
+  id?: string;
   name: string;
   target_weight: number;
   target_reps: number;
@@ -42,6 +43,7 @@ export interface WorkoutLog {
 }
 
 export interface CreateWorkoutLogInput {
+  id?: string;
   exercise_id: string;
   date?: string;
   actual_weight: number;
@@ -88,6 +90,7 @@ export interface BodyWeight {
 }
 
 export interface CreateBodyWeightInput {
+  id?: string;
   date?: string;
   weight: number;
   notes?: string;

@@ -182,17 +182,14 @@ struct AddBodyWeightSheet: View {
     @MainActor
     private func pushToAPI(_ entry: BodyWeightEntry) async {
         let request = CreateBodyWeightRequest(
+            id: entry.id.uuidString,
             date: ISO8601DateFormatter().string(from: entry.date),
             weight: entry.weight,
             notes: entry.notes.isEmpty ? nil : entry.notes
         )
         
         do {
-            let apiEntry = try await APIClient.shared.createBodyWeight(request)
-            if let uuid = UUID(uuidString: apiEntry.id) {
-                entry.id = uuid
-                try? modelContext.save()
-            }
+            _ = try await APIClient.shared.createBodyWeight(request)
         } catch {
             print("Failed to sync body weight to API: \(error.localizedDescription)")
         }

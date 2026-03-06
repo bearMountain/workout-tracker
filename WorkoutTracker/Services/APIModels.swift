@@ -31,6 +31,7 @@ struct APIExercise: Codable {
 }
 
 struct CreateExerciseRequest: Codable {
+    let id: String?
     let name: String
     let targetWeight: Double
     let targetReps: Int
@@ -90,6 +91,7 @@ struct APIWorkoutLog: Codable {
 }
 
 struct CreateWorkoutLogRequest: Codable {
+    let id: String?
     let exerciseId: String
     let date: String?
     let actualWeight: Double
@@ -164,6 +166,7 @@ struct APIBodyWeight: Codable {
 }
 
 struct CreateBodyWeightRequest: Codable {
+    let id: String?
     let date: String?
     let weight: Double
     let notes: String?
