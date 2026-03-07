@@ -64,6 +64,8 @@ struct HomeView: View {
         .onAppear {
             if viewModel == nil, let syncEngine {
                 viewModel = WorkoutViewModel(modelContext: modelContext, syncEngine: syncEngine)
+                viewModel?.fetchExercises()
+                viewModel?.fetchRecentLogs()
             }
         }
         .onChange(of: syncEngine?.lastSyncDate) {
@@ -96,7 +98,7 @@ struct HomeView: View {
                             Image(systemName: "calendar")
                                 .foregroundStyle(AppTheme.textMuted)
 
-                            Text("Next: \(nextDate.formatted(date: .abbreviated, time: .omitted))")
+                            Text("Next: \(nextDate.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))")
                                 .font(.subheadline)
                                 .foregroundStyle(AppTheme.textMuted)
                         }

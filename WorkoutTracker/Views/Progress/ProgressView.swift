@@ -37,6 +37,7 @@ struct ProgressTabView: View {
                 if viewModel == nil, let syncEngine {
                     viewModel = ProgressViewModel(modelContext: modelContext, syncEngine: syncEngine)
                 }
+                viewModel?.fetchData()
             }
             .onChange(of: syncEngine?.lastSyncDate) {
                 viewModel?.fetchData()

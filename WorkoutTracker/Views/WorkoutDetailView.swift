@@ -5,10 +5,8 @@ struct WorkoutDetailView: View {
     let workoutType: WorkoutType
     @Bindable var viewModel: WorkoutViewModel
     
-    @State private var selectedExercise: Exercise?
-    @State private var showingLogSheet = false
+    @State private var exerciseToLog: Exercise?
     @State private var showingAddSheet = false
-    @State private var showingEditSheet = false
     @State private var exerciseToEdit: Exercise?
     @State private var showingDeleteConfirmation = false
     @State private var exerciseToDelete: Exercise?
@@ -43,11 +41,9 @@ struct WorkoutDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingLogSheet) {
-            if let exercise = selectedExercise {
-                LogWorkoutSheet(exercise: exercise, viewModel: viewModel) {
-                    showingLogSheet = false
-                }
+        .sheet(item: $exerciseToLog) { exercise in
+            LogWorkoutSheet(exercise: exercise, viewModel: viewModel) {
+                exerciseToLog = nil
             }
         }
         .sheet(isPresented: $showingAddSheet) {
@@ -55,12 +51,9 @@ struct WorkoutDetailView: View {
                 showingAddSheet = false
             }
         }
-        .sheet(isPresented: $showingEditSheet) {
-            if let exercise = exerciseToEdit {
-                ExerciseEditorSheet(workoutType: workoutType, exercise: exercise, viewModel: viewModel) {
-                    showingEditSheet = false
-                    exerciseToEdit = nil
-                }
+        .sheet(item: $exerciseToEdit) { exercise in
+            ExerciseEditorSheet(workoutType: workoutType, exercise: exercise, viewModel: viewModel) {
+                exerciseToEdit = nil
             }
         }
         .alert("Delete Exercise?", isPresented: $showingDeleteConfirmation) {
@@ -81,23 +74,7 @@ struct WorkoutDetailView: View {
     }
     
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: workoutType.iconName)
-                    .font(.title2)
-                    .foregroundStyle(AppTheme.accent)
-                
-                Text(workoutType.description)
-                    .font(.headline)
-                    .foregroundStyle(AppTheme.textPrimary)
-            }
-            
-            Text("Perform each exercise to failure with perfect form. Rest 2-3 minutes between exercises.")
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.textSecondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
+        EmptyView()
     }
     
     private var emptyState: some View {
@@ -122,13 +99,11 @@ struct WorkoutDetailView: View {
         VStack(spacing: AppTheme.spacing) {
             ForEach(exercises) { exercise in
                 ExerciseRow(exercise: exercise) {
-                    selectedExercise = exercise
-                    showingLogSheet = true
+                    exerciseToLog = exercise
                 }
                 .contextMenu {
                     Button {
                         exerciseToEdit = exercise
-                        showingEditSheet = true
                     } label: {
                         Label("Edit", systemImage: "pencil")
                     }

@@ -51,9 +51,8 @@ struct HistoryView: View {
         .onAppear {
             if viewModel == nil, let syncEngine {
                 viewModel = HistoryViewModel(modelContext: modelContext, syncEngine: syncEngine)
-            } else {
-                viewModel?.fetchLogs()
             }
+            viewModel?.fetchLogs()
         }
         .onChange(of: syncEngine?.lastSyncDate) {
             viewModel?.fetchLogs()

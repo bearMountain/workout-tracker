@@ -3,7 +3,10 @@ import SwiftData
 
 @main
 struct WorkoutTrackerApp: App {
-    var sharedModelContainer: ModelContainer = {
+    let sharedModelContainer: ModelContainer
+    let syncEngine: SyncEngine
+
+    init() {
         let schema = Schema([
             Exercise.self,
             WorkoutLog.self,
@@ -13,24 +16,18 @@ struct WorkoutTrackerApp: App {
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            self.sharedModelContainer = container
+            self.syncEngine = SyncEngine(modelContext: container.mainContext)
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
-    }()
-
-    @State private var syncEngine: SyncEngine?
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
-                .task {
-                    if syncEngine == nil {
-                        let context = sharedModelContainer.mainContext
-                        syncEngine = SyncEngine(modelContext: context)
-                    }
-                }
                 .environment(syncEngine)
         }
         .modelContainer(sharedModelContainer)

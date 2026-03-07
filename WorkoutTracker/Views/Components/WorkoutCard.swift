@@ -32,10 +32,6 @@ struct WorkoutCard: View {
                         }
                     }
                     
-                    Text(workoutType.description)
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.textSecondary)
-                    
                     Text("\(exerciseCount) exercises")
                         .font(.caption)
                         .foregroundStyle(AppTheme.textMuted)

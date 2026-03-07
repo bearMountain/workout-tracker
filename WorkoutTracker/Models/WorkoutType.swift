@@ -6,15 +6,15 @@ enum WorkoutType: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
-        case .a: return "Workout A"
-        case .b: return "Workout B"
+        case .a: return "A: Legs"
+        case .b: return "B: Deadlift + Upper Body"
         }
     }
     
     var description: String {
         switch self {
-        case .a: return "Legs & Calves"
-        case .b: return "Upper Body"
+        case .a: return "Legs"
+        case .b: return "Deadlift + Upper Body"
         }
     }
     
