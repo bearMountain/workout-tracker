@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class WorkoutLog {
-    var id: UUID
+    @Attribute(.unique) var id: UUID
     var date: Date
     var actualWeight: Double
     var actualReps: Int

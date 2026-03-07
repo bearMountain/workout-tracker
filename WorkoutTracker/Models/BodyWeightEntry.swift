@@ -9,11 +9,12 @@ final class BodyWeightEntry {
     var notes: String
     
     init(
+        id: UUID = UUID(),
         date: Date = Date(),
         weight: Double,
         notes: String = ""
     ) {
-        self.id = UUID()
+        self.id = id
         self.date = date
         self.weight = weight
         self.notes = notes

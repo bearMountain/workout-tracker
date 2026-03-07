@@ -177,8 +177,11 @@ struct ExerciseEditorSheet: View {
 }
 
 #Preview {
-    ExerciseEditorSheet(
+    let container = try! ModelContainer(for: Exercise.self, WorkoutLog.self)
+    let context = container.mainContext
+    let syncEngine = SyncEngine(modelContext: context)
+    return ExerciseEditorSheet(
         workoutType: .a,
-        viewModel: WorkoutViewModel(modelContext: try! ModelContainer(for: Exercise.self, WorkoutLog.self).mainContext)
+        viewModel: WorkoutViewModel(modelContext: context, syncEngine: syncEngine)
     ) {}
 }

@@ -19,10 +19,19 @@ struct WorkoutTrackerApp: App {
         }
     }()
 
+    @State private var syncEngine: SyncEngine?
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
+                .task {
+                    if syncEngine == nil {
+                        let context = sharedModelContainer.mainContext
+                        syncEngine = SyncEngine(modelContext: context)
+                    }
+                }
+                .environment(syncEngine)
         }
         .modelContainer(sharedModelContainer)
     }

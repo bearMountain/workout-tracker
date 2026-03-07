@@ -5,6 +5,7 @@ struct BodyWeightCard: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \BodyWeightEntry.date, order: .reverse) private var bodyWeightEntries: [BodyWeightEntry]
     @State private var showAddSheet = false
+    var syncEngine: SyncEngine?
     
     private var latestEntry: BodyWeightEntry? {
         bodyWeightEntries.first
@@ -69,7 +70,7 @@ struct BodyWeightCard: View {
         }
         .cardStyle()
         .sheet(isPresented: $showAddSheet) {
-            AddBodyWeightSheet()
+            AddBodyWeightSheet(syncEngine: syncEngine)
         }
     }
     

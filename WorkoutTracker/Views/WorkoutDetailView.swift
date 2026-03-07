@@ -146,10 +146,13 @@ struct WorkoutDetailView: View {
 }
 
 #Preview {
-    NavigationStack {
+    let container = try! ModelContainer(for: Exercise.self, WorkoutLog.self)
+    let context = container.mainContext
+    let syncEngine = SyncEngine(modelContext: context)
+    return NavigationStack {
         WorkoutDetailView(
             workoutType: .a,
-            viewModel: WorkoutViewModel(modelContext: try! ModelContainer(for: Exercise.self, WorkoutLog.self).mainContext)
+            viewModel: WorkoutViewModel(modelContext: context, syncEngine: syncEngine)
         )
     }
 }

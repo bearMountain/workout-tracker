@@ -25,6 +25,7 @@
 		PRV001 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC017 /* SampleData.swift */; };
 		SVC001 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC018 /* APIClient.swift */; };
 		SVC002 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC019 /* APIModels.swift */; };
+		SVC003 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC029 /* SyncEngine.swift */; };
 		THM001 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC016 /* AppTheme.swift */; };
 		VIW001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC009 /* HomeView.swift */; };
 		VIW002 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC010 /* WorkoutDetailView.swift */; };
@@ -35,10 +36,22 @@
 		VWM001 /* WorkoutViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC007 /* WorkoutViewModel.swift */; };
 		VWM002 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC008 /* HistoryViewModel.swift */; };
 		VWM003 /* ProgressViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC028 /* ProgressViewModel.swift */; };
+		TST001 /* SyncEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSF001 /* SyncEngineTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CIP001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PRJ001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = TGT001;
+			remoteInfo = WorkoutTracker;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		PRD001 /* WorkoutTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WorkoutTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		PRD002 /* WorkoutTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WorkoutTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		RES001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		SRC001 /* WorkoutTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTrackerApp.swift; sourceTree = "<group>"; };
 		SRC002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -67,10 +80,19 @@
 		SRC026 /* ExerciseChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseChartView.swift; sourceTree = "<group>"; };
 		SRC027 /* BodyWeightChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightChartView.swift; sourceTree = "<group>"; };
 		SRC028 /* ProgressViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewModel.swift; sourceTree = "<group>"; };
+		SRC029 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		TSF001 /* SyncEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngineTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		FRM001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FRM002 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -84,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				GRP002 /* WorkoutTracker */,
+				GRP012 /* WorkoutTrackerTests */,
 				GRP003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -108,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				PRD001 /* WorkoutTracker.app */,
+				PRD002 /* WorkoutTrackerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -181,6 +205,7 @@
 			children = (
 				SRC018 /* APIClient.swift */,
 				SRC019 /* APIModels.swift */,
+				SRC029 /* SyncEngine.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -193,6 +218,14 @@
 				SRC027 /* BodyWeightChartView.swift */,
 			);
 			path = Progress;
+			sourceTree = "<group>";
+		};
+		GRP012 /* WorkoutTrackerTests */ = {
+			isa = PBXGroup;
+			children = (
+				TSF001 /* SyncEngineTests.swift */,
+			);
+			path = WorkoutTrackerTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -215,6 +248,23 @@
 			productReference = PRD001 /* WorkoutTracker.app */;
 			productType = "com.apple.product-type.application";
 		};
+		TGT002 /* WorkoutTrackerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFG007 /* Build configuration list for PBXNativeTarget "WorkoutTrackerTests" */;
+			buildPhases = (
+				TSS001 /* Sources */,
+				FRM002 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DEP001 /* PBXTargetDependency */,
+			);
+			name = WorkoutTrackerTests;
+			productName = WorkoutTrackerTests;
+			productReference = PRD002 /* WorkoutTrackerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -227,6 +277,10 @@
 				TargetAttributes = {
 					TGT001 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					TGT002 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = TGT001;
 					};
 				};
 			};
@@ -244,6 +298,7 @@
 			projectRoot = "";
 			targets = (
 				TGT001 /* WorkoutTracker */,
+				TGT002 /* WorkoutTrackerTests */,
 			);
 		};
 /* End PBXProject section */
@@ -291,10 +346,27 @@
 				PRV001 /* SampleData.swift in Sources */,
 				SVC001 /* APIClient.swift in Sources */,
 				SVC002 /* APIModels.swift in Sources */,
+				SVC003 /* SyncEngine.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		TSS001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				TST001 /* SyncEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DEP001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = TGT001 /* WorkoutTracker */;
+			targetProxy = CIP001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		CFG002 /* Debug */ = {
@@ -476,6 +548,42 @@
 			};
 			name = Release;
 		};
+		CFG008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QF6B888F7S;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jiggidy.workout-tracker.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WorkoutTracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WorkoutTracker";
+			};
+			name = Debug;
+		};
+		CFG009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QF6B888F7S;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jiggidy.workout-tracker.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WorkoutTracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WorkoutTracker";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -493,6 +601,15 @@
 			buildConfigurations = (
 				CFG005 /* Debug */,
 				CFG006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CFG007 /* Build configuration list for PBXNativeTarget "WorkoutTrackerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFG008 /* Debug */,
+				CFG009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

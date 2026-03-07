@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class ContentNote {
-    var id: UUID
+    @Attribute(.unique) var id: UUID
     var title: String
     var body: String
     var urlString: String

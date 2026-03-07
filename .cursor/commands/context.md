@@ -1,1 +1,2 @@
-read @/docs/Genesis.md into context (you don't need to repeat it to the user, just use it to prep your context for the work of this app)
+- read /docs/Genesis.md to understand the backstory of this books' creation
+- read /docs/base_checklist.md for an overview of the system

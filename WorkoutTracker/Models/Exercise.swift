@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class Exercise {
-    var id: UUID
+    @Attribute(.unique) var id: UUID
     var name: String
     var targetWeight: Double
     var targetReps: Int
@@ -20,6 +20,7 @@ final class Exercise {
     }
     
     init(
+        id: UUID = UUID(),
         name: String,
         targetWeight: Double,
         targetReps: Int,
@@ -27,7 +28,7 @@ final class Exercise {
         workoutType: WorkoutType,
         orderIndex: Int = 0
     ) {
-        self.id = UUID()
+        self.id = id
         self.name = name
         self.targetWeight = targetWeight
         self.targetReps = targetReps

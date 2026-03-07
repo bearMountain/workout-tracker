@@ -3,15 +3,15 @@ import SwiftData
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(SyncEngine.self) private var syncEngine: SyncEngine?
     @State private var viewModel: WorkoutViewModel?
     @State private var selectedWorkout: WorkoutType?
-    @State private var hasInitialSynced = false
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: AppTheme.spacingLarge) {
-                    if let viewModel = viewModel, viewModel.isSyncing {
+                    if syncEngine?.isSyncing == true {
                         HStack(spacing: 8) {
                             ProgressView()
                                 .tint(AppTheme.accent)
@@ -20,8 +20,8 @@ struct HomeView: View {
                                 .foregroundStyle(AppTheme.textMuted)
                         }
                     }
-                    
-                    if let error = viewModel?.syncError {
+
+                    if let error = syncEngine?.syncError {
                         HStack(spacing: 8) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(AppTheme.warning)
@@ -31,9 +31,9 @@ struct HomeView: View {
                         }
                         .cardStyle()
                     }
-                    
+
                     statusSection
-                    BodyWeightCard()
+                    BodyWeightCard(syncEngine: syncEngine)
                     workoutsSection
                 }
                 .padding()
@@ -45,33 +45,39 @@ struct HomeView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task {
-                            await viewModel?.syncFromAPI()
+                            await syncAndRefresh()
                         }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                             .foregroundStyle(AppTheme.accent)
                     }
-                    .disabled(viewModel?.isSyncing ?? false)
+                    .disabled(syncEngine?.isSyncing ?? false)
                 }
             }
             .refreshable {
-                await viewModel?.syncFromAPI()
+                await syncAndRefresh()
             }
             .navigationDestination(item: $selectedWorkout) { workoutType in
                 WorkoutDetailView(workoutType: workoutType, viewModel: viewModel!)
             }
         }
-        .task {
-            if viewModel == nil {
-                viewModel = WorkoutViewModel(modelContext: modelContext)
-            }
-            if !hasInitialSynced {
-                hasInitialSynced = true
-                await viewModel?.syncFromAPI()
+        .onAppear {
+            if viewModel == nil, let syncEngine {
+                viewModel = WorkoutViewModel(modelContext: modelContext, syncEngine: syncEngine)
             }
         }
+        .onChange(of: syncEngine?.lastSyncDate) {
+            viewModel?.fetchExercises()
+            viewModel?.fetchRecentLogs()
+        }
     }
-    
+
+    private func syncAndRefresh() async {
+        await syncEngine?.syncAll()
+        viewModel?.fetchExercises()
+        viewModel?.fetchRecentLogs()
+    }
+
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             if let viewModel = viewModel {
@@ -79,17 +85,17 @@ struct HomeView: View {
                     HStack(spacing: 8) {
                         Image(systemName: viewModel.isWorkoutDue ? "exclamationmark.circle.fill" : "clock")
                             .foregroundStyle(viewModel.isWorkoutDue ? AppTheme.warning : AppTheme.textSecondary)
-                        
+
                         Text(days == 0 ? "Worked out today" : "\(days) days since last workout")
                             .font(.subheadline)
                             .foregroundStyle(AppTheme.textSecondary)
                     }
-                    
+
                     if let nextDate = viewModel.nextWorkoutDate {
                         HStack(spacing: 8) {
                             Image(systemName: "calendar")
                                 .foregroundStyle(AppTheme.textMuted)
-                            
+
                             Text("Next: \(nextDate.formatted(date: .abbreviated, time: .omitted))")
                                 .font(.subheadline)
                                 .foregroundStyle(AppTheme.textMuted)
@@ -99,7 +105,7 @@ struct HomeView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "figure.strengthtraining.traditional")
                             .foregroundStyle(AppTheme.accent)
-                        
+
                         Text("Ready to start your training")
                             .font(.subheadline)
                             .foregroundStyle(AppTheme.textSecondary)
@@ -110,14 +116,14 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
     }
-    
+
     private var workoutsSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             Text("Workouts")
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundStyle(AppTheme.textPrimary)
-            
+
             if let viewModel = viewModel {
                 ForEach(WorkoutType.allCases, id: \.self) { type in
                     WorkoutCard(

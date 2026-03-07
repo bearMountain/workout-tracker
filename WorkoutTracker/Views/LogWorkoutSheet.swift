@@ -210,8 +210,11 @@ struct LogWorkoutSheet: View {
         workoutType: .a
     )
     
+    let container = try! ModelContainer(for: Exercise.self, WorkoutLog.self)
+    let context = container.mainContext
+    let syncEngine = SyncEngine(modelContext: context)
     LogWorkoutSheet(
         exercise: exercise,
-        viewModel: WorkoutViewModel(modelContext: try! ModelContainer(for: Exercise.self, WorkoutLog.self).mainContext)
+        viewModel: WorkoutViewModel(modelContext: context, syncEngine: syncEngine)
     ) {}
 }

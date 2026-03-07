@@ -3,14 +3,14 @@ import SwiftData
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(SyncEngine.self) private var syncEngine: SyncEngine?
     @State private var viewModel: HistoryViewModel?
-    @State private var hasInitialSynced = false
-    
+
     var body: some View {
         NavigationStack {
             Group {
                 if let viewModel = viewModel {
-                    if viewModel.isSyncing && viewModel.logs.isEmpty {
+                    if syncEngine?.isSyncing == true && viewModel.logs.isEmpty {
                         VStack(spacing: AppTheme.spacing) {
                             ProgressView()
                                 .tint(AppTheme.accent)
@@ -35,50 +35,54 @@ struct HistoryView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task {
-                            await viewModel?.syncFromAPI()
+                            await syncAndRefresh()
                         }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                             .foregroundStyle(AppTheme.accent)
                     }
-                    .disabled(viewModel?.isSyncing ?? false)
+                    .disabled(syncEngine?.isSyncing ?? false)
                 }
             }
             .refreshable {
-                await viewModel?.syncFromAPI()
+                await syncAndRefresh()
             }
         }
-        .task {
-            if viewModel == nil {
-                viewModel = HistoryViewModel(modelContext: modelContext)
+        .onAppear {
+            if viewModel == nil, let syncEngine {
+                viewModel = HistoryViewModel(modelContext: modelContext, syncEngine: syncEngine)
             } else {
                 viewModel?.fetchLogs()
             }
-            if !hasInitialSynced {
-                hasInitialSynced = true
-                await viewModel?.syncFromAPI()
-            }
+        }
+        .onChange(of: syncEngine?.lastSyncDate) {
+            viewModel?.fetchLogs()
         }
     }
-    
+
+    private func syncAndRefresh() async {
+        await syncEngine?.syncAll()
+        viewModel?.fetchLogs()
+    }
+
     private var emptyState: some View {
         VStack(spacing: AppTheme.spacing) {
             Image(systemName: "calendar.badge.clock")
                 .font(.system(size: 64))
                 .foregroundStyle(AppTheme.textMuted)
-            
+
             Text("No workout history yet")
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundStyle(AppTheme.textSecondary)
-            
+
             Text("Your logged workouts will appear here")
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textMuted)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private func logsList(viewModel: HistoryViewModel) -> some View {
         ScrollView {
             LazyVStack(spacing: AppTheme.spacingLarge) {
@@ -103,13 +107,13 @@ struct SessionCard: View {
     let session: WorkoutSession
     let onDeleteLog: (WorkoutLog) -> Void
     let onDeleteSession: () -> Void
-    
+
     @State private var showingDeleteConfirmation = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             headerSection
-            
+
             ForEach(session.exercises) { exerciseSets in
                 ExerciseSetsRow(exerciseSets: exerciseSets, onDeleteLog: onDeleteLog)
             }
@@ -131,13 +135,13 @@ struct SessionCard: View {
             Text("This will delete all \(session.totalSets) sets from this workout. This cannot be undone.")
         }
     }
-    
+
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(session.formattedDate)
                 .font(.headline)
                 .foregroundStyle(AppTheme.textPrimary)
-            
+
             HStack(spacing: 8) {
                 if let workoutType = session.workoutType {
                     Text(workoutType.displayName)
@@ -149,7 +153,7 @@ struct SessionCard: View {
                         .background(AppTheme.accent.opacity(0.2))
                         .clipShape(Capsule())
                 }
-                
+
                 Text("\(session.exercises.count) exercises · \(session.totalSets) sets")
                     .font(.caption)
                     .foregroundStyle(AppTheme.textMuted)
@@ -161,7 +165,7 @@ struct SessionCard: View {
 struct ExerciseSetsRow: View {
     let exerciseSets: ExerciseSets
     let onDeleteLog: (WorkoutLog) -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -169,14 +173,14 @@ struct ExerciseSetsRow: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(AppTheme.textPrimary)
-                
+
                 Spacer()
-                
+
                 Text("Target: \(Int(exerciseSets.targetWeight))×\(exerciseSets.targetReps)")
                     .font(.caption)
                     .foregroundStyle(AppTheme.textMuted)
             }
-            
+
             VStack(spacing: 4) {
                 ForEach(Array(exerciseSets.sets.enumerated()), id: \.element.id) { index, log in
                     HStack(spacing: 8) {
@@ -184,23 +188,23 @@ struct ExerciseSetsRow: View {
                             .font(.caption)
                             .foregroundStyle(AppTheme.textMuted)
                             .frame(width: 40, alignment: .leading)
-                        
+
                         Text("\(Int(log.actualWeight)) × \(log.actualReps)")
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(log.metTarget ? AppTheme.success : AppTheme.textSecondary)
-                        
+
                         Text(log.feelingEmoji)
                             .font(.caption)
-                        
+
                         if log.metTarget {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
                                 .foregroundStyle(AppTheme.success)
                         }
-                        
+
                         Spacer()
-                        
+
                         Button(role: .destructive) {
                             onDeleteLog(log)
                         } label: {

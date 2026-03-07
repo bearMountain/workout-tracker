@@ -3,27 +3,28 @@ import SwiftData
 
 struct ProgressTabView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(SyncEngine.self) private var syncEngine: SyncEngine?
     @State private var viewModel: ProgressViewModel?
     @State private var selectedExerciseIndex = 0
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
                 AppTheme.background.ignoresSafeArea()
-                
+
                 if let viewModel = viewModel {
                     ScrollView {
                         VStack(spacing: AppTheme.spacingLarge) {
                             dateRangePicker(viewModel: viewModel)
-                            
+
                             exerciseProgressSection(viewModel: viewModel)
-                            
+
                             bodyWeightSection(viewModel: viewModel)
                         }
                         .padding()
                     }
                     .refreshable {
-                        await viewModel.syncFromAPI()
+                        await syncEngine?.syncAll()
                         viewModel.fetchData()
                     }
                 } else {
@@ -33,13 +34,16 @@ struct ProgressTabView: View {
             }
             .navigationTitle("Progress")
             .onAppear {
-                if viewModel == nil {
-                    viewModel = ProgressViewModel(modelContext: modelContext)
+                if viewModel == nil, let syncEngine {
+                    viewModel = ProgressViewModel(modelContext: modelContext, syncEngine: syncEngine)
                 }
+            }
+            .onChange(of: syncEngine?.lastSyncDate) {
+                viewModel?.fetchData()
             }
         }
     }
-    
+
     private func dateRangePicker(viewModel: ProgressViewModel) -> some View {
         HStack(spacing: 8) {
             ForEach(DateRange.allCases, id: \.self) { range in
@@ -68,16 +72,16 @@ struct ProgressTabView: View {
         }
         .padding(.vertical, 8)
     }
-    
+
     private func exerciseProgressSection(viewModel: ProgressViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             HStack {
                 Text("Exercise Progress")
                     .font(.title2.bold())
                     .foregroundStyle(AppTheme.textPrimary)
-                
+
                 Spacer()
-                
+
                 if !viewModel.exercises.isEmpty {
                     Menu {
                         ForEach(Array(viewModel.exercises.enumerated()), id: \.element.id) { index, exercise in
@@ -108,7 +112,7 @@ struct ProgressTabView: View {
                     }
                 }
             }
-            
+
             if let exercise = viewModel.selectedExercise {
                 ExerciseChartView(
                     exercise: exercise,
@@ -124,17 +128,17 @@ struct ProgressTabView: View {
             }
         }
     }
-    
+
     private var emptyExercisesView: some View {
         VStack(spacing: 12) {
             Image(systemName: "dumbbell")
                 .font(.largeTitle)
                 .foregroundStyle(AppTheme.textMuted)
-            
+
             Text("No exercises yet")
                 .font(.headline)
                 .foregroundStyle(AppTheme.textSecondary)
-            
+
             Text("Add exercises from the Home tab to start tracking progress")
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textMuted)
@@ -144,13 +148,13 @@ struct ProgressTabView: View {
         .padding(.vertical, 40)
         .cardStyle()
     }
-    
+
     private func bodyWeightSection(viewModel: ProgressViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             Text("Body Weight")
                 .font(.title2.bold())
                 .foregroundStyle(AppTheme.textPrimary)
-            
+
             BodyWeightChartView(
                 data: viewModel.bodyWeightChartData,
                 latestWeight: viewModel.latestBodyWeight?.weight,

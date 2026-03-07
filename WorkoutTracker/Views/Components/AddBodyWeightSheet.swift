@@ -4,6 +4,7 @@ import SwiftData
 struct AddBodyWeightSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    var syncEngine: SyncEngine?
     
     @State private var weight: String = ""
     @State private var date: Date = Date()
@@ -169,29 +170,15 @@ struct AddBodyWeightSheet: View {
         do {
             try modelContext.save()
             
-            Task {
-                await pushToAPI(entry)
+            if let syncEngine {
+                Task {
+                    await syncEngine.pushBodyWeight(entry)
+                }
             }
             
             dismiss()
         } catch {
             isSaving = false
-        }
-    }
-    
-    @MainActor
-    private func pushToAPI(_ entry: BodyWeightEntry) async {
-        let request = CreateBodyWeightRequest(
-            id: entry.id.uuidString,
-            date: APIClient.dateFormatter.string(from: entry.date),
-            weight: entry.weight,
-            notes: entry.notes.isEmpty ? nil : entry.notes
-        )
-        
-        do {
-            _ = try await APIClient.shared.createBodyWeight(request)
-        } catch {
-            print("Failed to sync body weight to API: \(error.localizedDescription)")
         }
     }
 }
