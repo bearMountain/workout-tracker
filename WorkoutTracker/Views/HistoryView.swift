@@ -188,12 +188,12 @@ struct ExerciseSetsRow: View {
                             .foregroundStyle(AppTheme.textMuted)
                             .frame(width: 40, alignment: .leading)
 
-                        Text("\(Int(log.actualWeight)) × \(log.actualReps)")
+                        Text(log.formattedSetLabel)
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(log.metTarget ? AppTheme.success : AppTheme.textSecondary)
 
-                        Text(log.feelingEmoji)
+                        Text(log.feelingLabel)
                             .font(.caption)
 
                         if log.metTarget {

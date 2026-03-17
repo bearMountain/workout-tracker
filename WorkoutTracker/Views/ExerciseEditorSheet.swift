@@ -61,7 +61,7 @@ struct ExerciseEditorSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
     

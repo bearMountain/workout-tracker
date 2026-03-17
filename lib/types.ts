@@ -37,6 +37,7 @@ export interface WorkoutLog {
   date: string;
   actual_weight: number;
   actual_reps: number;
+  is_machine: boolean;
   feeling: number;
   notes: string;
   created_at: string;
@@ -48,6 +49,7 @@ export interface CreateWorkoutLogInput {
   date?: string;
   actual_weight: number;
   actual_reps: number;
+  is_machine?: boolean;
   feeling: number;
   notes?: string;
 }
@@ -56,6 +58,7 @@ export interface UpdateWorkoutLogInput {
   date?: string;
   actual_weight?: number;
   actual_reps?: number;
+  is_machine?: boolean;
   feeling?: number;
   notes?: string;
 }

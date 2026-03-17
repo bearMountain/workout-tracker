@@ -6,10 +6,12 @@ struct LogWorkoutSheet: View {
     @Bindable var viewModel: WorkoutViewModel
     let onDismiss: () -> Void
     
-    @State private var weight: Double
+    @State private var weightText: String
     @State private var reps: Int
     @State private var feeling: Int = 3
     @State private var notes: String = ""
+    @State private var isMachine = false
+    @FocusState private var isWeightFieldFocused: Bool
     
     init(exercise: Exercise, viewModel: WorkoutViewModel, onDismiss: @escaping () -> Void) {
         self.exercise = exercise
@@ -17,24 +19,32 @@ struct LogWorkoutSheet: View {
         self.onDismiss = onDismiss
         
         if let lastLog = exercise.latestLog {
-            _weight = State(initialValue: lastLog.actualWeight)
+            _weightText = State(initialValue: Self.weightText(for: lastLog.actualWeight))
             _reps = State(initialValue: lastLog.actualReps)
+            _isMachine = State(initialValue: lastLog.isMachine)
         } else {
-            _weight = State(initialValue: exercise.targetWeight)
+            _weightText = State(initialValue: Self.weightText(for: exercise.targetWeight))
             _reps = State(initialValue: exercise.targetReps)
         }
     }
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: AppTheme.spacingLarge) {
-                    targetSection
-                    inputSection
-                    feelingSection
-                    notesSection
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView {
+                    VStack(spacing: AppTheme.spacingLarge) {
+                        targetSection
+                        inputSection
+                        feelingSection
+                        notesSection
+                    }
+                    .padding()
+                    .padding(.bottom, 140)
                 }
-                .padding()
+
+                floatingSaveButton
+                    .padding(.trailing, 24)
+                    .padding(.bottom, 100)
             }
             .background(AppTheme.background)
             .navigationTitle("Log Set")
@@ -46,17 +56,16 @@ struct LogWorkoutSheet: View {
                     }
                     .foregroundStyle(AppTheme.textSecondary)
                 }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveLog()
+            }
+            .onAppear {
+                if parsedWeight == 0 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        isWeightFieldFocused = false
                     }
-                    .fontWeight(.semibold)
-                    .foregroundStyle(AppTheme.accent)
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
     
@@ -68,7 +77,7 @@ struct LogWorkoutSheet: View {
                 .foregroundStyle(AppTheme.textPrimary)
             
             HStack(spacing: 16) {
-                Label("Target: \(Int(exercise.targetWeight)) lbs", systemImage: "target")
+                Label("Target: \(targetWeightLabel)", systemImage: "target")
                 Label("\(exercise.targetReps) reps", systemImage: "repeat")
             }
             .font(.subheadline)
@@ -87,26 +96,51 @@ struct LogWorkoutSheet: View {
                 
                 HStack {
                     Button {
-                        if weight >= 5 { weight -= 5 }
+                        let nextWeight = max(parsedWeight - 5, 0)
+                        weightText = Self.weightText(for: nextWeight)
                     } label: {
                         Image(systemName: "minus.circle.fill")
                             .font(.title2)
                             .foregroundStyle(AppTheme.textSecondary)
                     }
                     
-                    TextField("Weight", value: $weight, format: .number)
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .keyboardType(.decimalPad)
+                    ZStack {
+                        TextField("Weight", text: $weightText)
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .keyboardType(.decimalPad)
+                            .focused($isWeightFieldFocused)
+                            .opacity(showsBodyWeightBadge ? 0.02 : 1)
+                        
+                        if showsBodyWeightBadge {
+                            Text("BW")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundStyle(AppTheme.textPrimary)
+                                .allowsHitTesting(false)
+                        }
+                    }
                     
                     Button {
-                        weight += 5
+                        weightText = Self.weightText(for: parsedWeight + 5)
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
                             .foregroundStyle(AppTheme.accent)
                     }
+                }
+                
+                Button {
+                    isMachine.toggle()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: isMachine ? "checkmark.square.fill" : "square")
+                            .foregroundStyle(isMachine ? AppTheme.accent : AppTheme.textMuted)
+                        Text("Machine")
+                            .foregroundStyle(AppTheme.textPrimary)
+                        Spacer()
+                    }
+                    .font(.subheadline)
                 }
             }
             
@@ -152,16 +186,18 @@ struct LogWorkoutSheet: View {
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
             
-            HStack(spacing: 0) {
-                ForEach(1...5, id: \.self) { level in
+            VStack(spacing: 8) {
+                ForEach(feelingOptions, id: \.value) { option in
                     Button {
-                        feeling = level
+                        feeling = option.value
                     } label: {
-                        Text(feelingEmoji(for: level))
-                            .font(.system(size: 28))
+                        Text(option.label)
+                            .font(.subheadline)
+                            .fontWeight(feeling == option.value ? .semibold : .regular)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(feeling == level ? AppTheme.cardBorder : Color.clear)
+                            .padding(.vertical, 10)
+                            .background(feeling == option.value ? AppTheme.accent.opacity(0.2) : AppTheme.cardBorder.opacity(0.3))
+                            .foregroundStyle(feeling == option.value ? AppTheme.accent : AppTheme.textPrimary)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
@@ -170,13 +206,22 @@ struct LogWorkoutSheet: View {
         .cardStyle()
     }
     
+    private var feelingOptions: [(value: Int, label: String)] {
+        [
+            (1, "warmup"),
+            (2, "easy work"),
+            (3, "hard but got it"),
+            (4, "0 RIR")
+        ]
+    }
+    
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Notes (optional)")
+            Text("Notes")
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
             
-            TextField("How was your form? Any adjustments?", text: $notes, axis: .vertical)
+            TextField("", text: $notes, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.body)
                 .foregroundStyle(AppTheme.textPrimary)
@@ -185,20 +230,55 @@ struct LogWorkoutSheet: View {
         .cardStyle()
     }
     
-    private func feelingEmoji(for level: Int) -> String {
-        switch level {
-        case 1: return "😫"
-        case 2: return "😕"
-        case 3: return "😐"
-        case 4: return "😊"
-        case 5: return "💪"
-        default: return "😐"
+    private var parsedWeight: Double {
+        Double(weightText) ?? 0
+    }
+    
+    private var showsBodyWeightBadge: Bool {
+        !isWeightFieldFocused && parsedWeight == 0 && !weightText.isEmpty
+    }
+    
+    private var canSave: Bool {
+        !weightText.isEmpty && Double(weightText) != nil && reps > 0
+    }
+    
+    private var targetWeightLabel: String {
+        exercise.targetWeight == 0 ? "BW" : "\(Int(exercise.targetWeight)) lbs"
+    }
+    
+    private var floatingSaveButton: some View {
+        Button {
+            saveLog()
+        } label: {
+            Image(systemName: "checkmark")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(AppTheme.background)
+                .frame(width: 56, height: 56)
+                .background(canSave ? AppTheme.accent : AppTheme.textMuted)
+                .clipShape(Circle())
+                .shadow(color: AppTheme.background.opacity(0.35), radius: 16, x: 0, y: 10)
         }
+        .disabled(!canSave)
     }
     
     private func saveLog() {
-        viewModel.logWorkout(for: exercise, weight: weight, reps: reps, feeling: feeling, notes: notes)
+        guard canSave, let weight = Double(weightText) else { return }
+        viewModel.logWorkout(
+            for: exercise,
+            weight: weight,
+            reps: reps,
+            feeling: feeling,
+            notes: notes,
+            isMachine: isMachine
+        )
         onDismiss()
+    }
+    
+    private static func weightText(for weight: Double) -> String {
+        if weight.rounded(.towardZero) == weight {
+            return String(Int(weight))
+        }
+        return String(format: "%.1f", weight)
     }
 }
 

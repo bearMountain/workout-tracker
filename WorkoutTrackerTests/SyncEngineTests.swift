@@ -52,6 +52,7 @@ actor MockAPIClient: APIClientProtocol {
             date: input.date ?? "",
             actualWeight: input.actualWeight,
             actualReps: input.actualReps,
+            isMachine: input.isMachine,
             feeling: input.feeling,
             notes: input.notes ?? "",
             createdAt: "", exerciseName: nil, workoutType: nil
@@ -285,7 +286,7 @@ final class SyncEngineTests: XCTestCase {
                 id: logId.uuidString,
                 exerciseId: exerciseId.uuidString,
                 date: "2026-03-05T12:00:00.000Z",
-                actualWeight: 205, actualReps: 5, feeling: 4, notes: "",
+                actualWeight: 205, actualReps: 5, isMachine: false, feeling: 4, notes: "",
                 createdAt: "", exerciseName: "Squat", workoutType: "A"
             )
         ])

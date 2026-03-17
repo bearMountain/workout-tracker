@@ -94,6 +94,7 @@ final class SyncEngine {
             if let existing = fetchWorkoutLog(id: uuid) {
                 existing.actualWeight = apiLog.actualWeight
                 existing.actualReps = apiLog.actualReps
+                existing.isMachine = apiLog.isMachine ?? false
                 existing.feeling = apiLog.feeling
                 existing.notes = apiLog.notes
                 existing.date = APIClient.dateFormatter.date(from: apiLog.date) ?? existing.date
@@ -106,6 +107,7 @@ final class SyncEngine {
                     date: date,
                     actualWeight: apiLog.actualWeight,
                     actualReps: apiLog.actualReps,
+                    isMachine: apiLog.isMachine ?? false,
                     feeling: apiLog.feeling,
                     notes: apiLog.notes,
                     exercise: exercise
@@ -182,6 +184,7 @@ final class SyncEngine {
             date: APIClient.dateFormatter.string(from: log.date),
             actualWeight: log.actualWeight,
             actualReps: log.actualReps,
+            isMachine: log.isMachine,
             feeling: log.feeling,
             notes: log.notes
         )

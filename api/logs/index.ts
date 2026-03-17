@@ -47,8 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      if (body.feeling < 1 || body.feeling > 5) {
-        return res.status(400).json({ error: 'feeling must be between 1 and 5' });
+      if (body.feeling < 1 || body.feeling > 4) {
+        return res.status(400).json({ error: 'feeling must be between 1 and 4' });
       }
 
       const exerciseExists = await sql`
@@ -62,13 +62,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let result;
       if (body.id) {
         result = await sql<WorkoutLog>`
-          INSERT INTO workout_logs (id, exercise_id, date, actual_weight, actual_reps, feeling, notes)
+          INSERT INTO workout_logs (id, exercise_id, date, actual_weight, actual_reps, is_machine, feeling, notes)
           VALUES (
             ${body.id},
             ${body.exercise_id},
             ${body.date || new Date().toISOString()},
             ${body.actual_weight},
             ${body.actual_reps},
+            ${body.is_machine ?? false},
             ${body.feeling},
             ${body.notes || ''}
           )
@@ -77,18 +78,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             date = EXCLUDED.date,
             actual_weight = EXCLUDED.actual_weight,
             actual_reps = EXCLUDED.actual_reps,
+            is_machine = EXCLUDED.is_machine,
             feeling = EXCLUDED.feeling,
             notes = EXCLUDED.notes
           RETURNING *
         `;
       } else {
         result = await sql<WorkoutLog>`
-          INSERT INTO workout_logs (exercise_id, date, actual_weight, actual_reps, feeling, notes)
+          INSERT INTO workout_logs (exercise_id, date, actual_weight, actual_reps, is_machine, feeling, notes)
           VALUES (
             ${body.exercise_id},
             ${body.date || new Date().toISOString()},
             ${body.actual_weight},
             ${body.actual_reps},
+            ${body.is_machine ?? false},
             ${body.feeling},
             ${body.notes || ''}
           )

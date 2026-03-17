@@ -10,6 +10,7 @@ struct AddBodyWeightSheet: View {
     @State private var date: Date = Date()
     @State private var notes: String = ""
     @State private var isSaving = false
+    @FocusState private var isWeightFieldFocused: Bool
     
     @Query(sort: \BodyWeightEntry.date, order: .reverse) private var recentEntries: [BodyWeightEntry]
     
@@ -61,8 +62,9 @@ struct AddBodyWeightSheet: View {
             }
         }
         .onAppear {
-            if let lastWeight = lastWeight {
-                weight = String(format: "%.1f", lastWeight)
+            weight = ""
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                isWeightFieldFocused = true
             }
         }
     }
@@ -80,6 +82,7 @@ struct AddBodyWeightSheet: View {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
+                    .focused($isWeightFieldFocused)
                 
                 Text("lbs")
                     .font(.title2)

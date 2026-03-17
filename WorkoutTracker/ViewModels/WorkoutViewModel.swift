@@ -69,10 +69,11 @@ class WorkoutViewModel {
         return days >= 7
     }
 
-    func logWorkout(for exercise: Exercise, weight: Double, reps: Int, feeling: Int, notes: String) {
+    func logWorkout(for exercise: Exercise, weight: Double, reps: Int, feeling: Int, notes: String, isMachine: Bool = false) {
         let log = WorkoutLog(
             actualWeight: weight,
             actualReps: reps,
+            isMachine: isMachine,
             feeling: feeling,
             notes: notes,
             exercise: exercise

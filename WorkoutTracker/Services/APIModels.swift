@@ -73,6 +73,7 @@ struct APIWorkoutLog: Codable {
     let date: String
     let actualWeight: Double
     let actualReps: Int
+    let isMachine: Bool?
     let feeling: Int
     let notes: String
     let createdAt: String
@@ -84,6 +85,7 @@ struct APIWorkoutLog: Codable {
         case exerciseId = "exercise_id"
         case actualWeight = "actual_weight"
         case actualReps = "actual_reps"
+        case isMachine = "is_machine"
         case createdAt = "created_at"
         case exerciseName = "exercise_name"
         case workoutType = "workout_type"
@@ -96,6 +98,7 @@ struct CreateWorkoutLogRequest: Codable {
     let date: String?
     let actualWeight: Double
     let actualReps: Int
+    let isMachine: Bool?
     let feeling: Int
     let notes: String?
     
@@ -104,6 +107,7 @@ struct CreateWorkoutLogRequest: Codable {
         case exerciseId = "exercise_id"
         case actualWeight = "actual_weight"
         case actualReps = "actual_reps"
+        case isMachine = "is_machine"
     }
 }
 
@@ -111,6 +115,7 @@ struct UpdateWorkoutLogRequest: Codable {
     let date: String?
     let actualWeight: Double?
     let actualReps: Int?
+    let isMachine: Bool?
     let feeling: Int?
     let notes: String?
     
@@ -118,6 +123,7 @@ struct UpdateWorkoutLogRequest: Codable {
         case date, notes, feeling
         case actualWeight = "actual_weight"
         case actualReps = "actual_reps"
+        case isMachine = "is_machine"
     }
 }
 
@@ -177,6 +183,7 @@ struct UpdateBodyWeightRequest: Codable {
     let weight: Double?
     let notes: String?
 }
+
 
 
 

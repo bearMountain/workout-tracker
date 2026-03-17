@@ -24,10 +24,16 @@ export async function initializeDatabase() {
       date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
       actual_weight DECIMAL(10, 2) NOT NULL,
       actual_reps INTEGER NOT NULL,
+      is_machine BOOLEAN NOT NULL DEFAULT FALSE,
       feeling INTEGER NOT NULL CHECK (feeling >= 1 AND feeling <= 5),
       notes TEXT DEFAULT '',
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )
+  `;
+  
+  await sql`
+    ALTER TABLE workout_logs
+    ADD COLUMN IF NOT EXISTS is_machine BOOLEAN NOT NULL DEFAULT FALSE
   `;
 
   await sql`
@@ -97,6 +103,7 @@ export function normalizeWorkoutLog(row: Record<string, unknown>) {
     ...row,
     actual_weight: Number(row.actual_weight),
     actual_reps: Number(row.actual_reps),
+    is_machine: Boolean(row.is_machine),
     feeling: Number(row.feeling),
   };
 }

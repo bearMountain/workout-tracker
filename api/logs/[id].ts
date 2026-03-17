@@ -42,8 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const current = existing.rows[0];
 
-      if (body.feeling !== undefined && (body.feeling < 1 || body.feeling > 5)) {
-        return res.status(400).json({ error: 'feeling must be between 1 and 5' });
+      if (body.feeling !== undefined && (body.feeling < 1 || body.feeling > 4)) {
+        return res.status(400).json({ error: 'feeling must be between 1 and 4' });
       }
 
       const result = await sql<WorkoutLog>`
@@ -51,6 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           date = ${body.date ?? current.date},
           actual_weight = ${body.actual_weight ?? current.actual_weight},
           actual_reps = ${body.actual_reps ?? current.actual_reps},
+          is_machine = ${body.is_machine ?? current.is_machine},
           feeling = ${body.feeling ?? current.feeling},
           notes = ${body.notes ?? current.notes}
         WHERE id = ${id}

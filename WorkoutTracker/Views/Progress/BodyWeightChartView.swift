@@ -10,13 +10,22 @@ struct BodyWeightChartView: View {
     let entryCount: Int
     let motivationalMessage: String?
     
+    private var calendar: Calendar {
+        Calendar.current
+    }
+    
+    private func startOfWeek(for date: Date) -> Date {
+        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        return calendar.date(from: components) ?? date
+    }
+    
     private var xAxisDomain: ClosedRange<Date> {
         guard let first = data.first?.date, let last = data.last?.date else {
             return Date()...Date()
         }
-        let totalSpan = last.timeIntervalSince(first)
-        let padding = max(totalSpan * 0.08, 3600)
-        return first.addingTimeInterval(-padding)...last.addingTimeInterval(padding)
+        let start = startOfWeek(for: first)
+        let end = calendar.date(byAdding: .day, value: 6, to: startOfWeek(for: last)) ?? last
+        return start...end
     }
     
     private var yAxisDomain: ClosedRange<Double> {
@@ -98,14 +107,15 @@ struct BodyWeightChartView: View {
         .frame(height: 200)
     }
     
-    private var uniqueDates: [Date] {
+    private var weekStartDates: [Date] {
         var seen = Set<String>()
         return data.compactMap { point -> Date? in
-            let key = point.date.formatted(.dateTime.month().day())
+            let weekStart = startOfWeek(for: point.date)
+            let key = weekStart.formatted(.iso8601.year().month().day())
             if seen.contains(key) { return nil }
             seen.insert(key)
-            return point.date
-        }
+            return weekStart
+        }.sorted()
     }
     
     private var chartSection: some View {
@@ -128,12 +138,11 @@ struct BodyWeightChartView: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: uniqueDates) { _ in
+            AxisMarks(values: weekStartDates) { _ in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
                     .foregroundStyle(AppTheme.cardBorder)
                 AxisValueLabel(format: .dateTime.month(.defaultDigits).day())
                     .foregroundStyle(AppTheme.textSecondary)
-                    .offset(x: -12)
             }
         }
         .chartYAxis {

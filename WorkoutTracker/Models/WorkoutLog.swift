@@ -7,6 +7,7 @@ final class WorkoutLog {
     var date: Date
     var actualWeight: Double
     var actualReps: Int
+    var isMachine: Bool
     var feeling: Int
     var notes: String
     
@@ -16,6 +17,7 @@ final class WorkoutLog {
         date: Date = Date(),
         actualWeight: Double,
         actualReps: Int,
+        isMachine: Bool = false,
         feeling: Int = 3,
         notes: String = "",
         exercise: Exercise? = nil
@@ -24,20 +26,37 @@ final class WorkoutLog {
         self.date = date
         self.actualWeight = actualWeight
         self.actualReps = actualReps
-        self.feeling = min(5, max(1, feeling))
+        self.isMachine = isMachine
+        self.feeling = min(4, max(1, feeling))
         self.notes = notes
         self.exercise = exercise
     }
     
-    var feelingEmoji: String {
+    var feelingLabel: String {
         switch feeling {
-        case 1: return "😫"
-        case 2: return "😕"
-        case 3: return "😐"
-        case 4: return "😊"
-        case 5: return "💪"
-        default: return "😐"
+        case 1: return "warmup"
+        case 2: return "easy work"
+        case 3: return "hard but got it"
+        case 4: return "0 RIR"
+        default: return "hard but got it"
         }
+    }
+    
+    var formattedWeightLabel: String {
+        let weightLabel: String
+        if actualWeight == 0 {
+            weightLabel = "BW"
+        } else if actualWeight.rounded(.towardZero) == actualWeight {
+            weightLabel = String(Int(actualWeight))
+        } else {
+            weightLabel = String(format: "%.1f", actualWeight)
+        }
+        
+        return isMachine ? "\(weightLabel)M" : weightLabel
+    }
+    
+    var formattedSetLabel: String {
+        "\(formattedWeightLabel) × \(actualReps)"
     }
     
     var formattedDate: String {

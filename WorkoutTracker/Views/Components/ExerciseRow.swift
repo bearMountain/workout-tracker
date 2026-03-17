@@ -61,12 +61,12 @@ struct ExerciseRow: View {
                         .font(.caption)
                         .foregroundStyle(AppTheme.textMuted)
                     
-                    Text("\(Int(latestLog.actualWeight)) × \(latestLog.actualReps)")
+                    Text(latestLog.formattedSetLabel)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(latestLog.metTarget ? AppTheme.success : AppTheme.textSecondary)
                     
-                    Text(latestLog.feelingEmoji)
+                    Text(latestLog.feelingLabel)
                         .font(.caption)
                 }
             }
@@ -87,12 +87,12 @@ struct ExerciseRow: View {
                         .foregroundStyle(AppTheme.textSecondary)
                         .frame(width: 44, alignment: .leading)
                     
-                    Text("\(Int(log.actualWeight)) × \(log.actualReps)")
+                    Text(log.formattedSetLabel)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(log.metTarget ? AppTheme.success : AppTheme.textPrimary)
                     
-                    Text(log.feelingEmoji)
+                    Text(log.feelingLabel)
                         .font(.caption)
                     
                     Spacer()
