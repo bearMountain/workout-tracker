@@ -14,8 +14,12 @@ struct AddBodyWeightSheet: View {
     
     @Query(sort: \BodyWeightEntry.date, order: .reverse) private var recentEntries: [BodyWeightEntry]
     
+    private var visibleRecentEntries: [BodyWeightEntry] {
+        recentEntries.filter { !$0.isDeleted }
+    }
+    
     private var lastWeight: Double? {
-        recentEntries.first?.weight
+        visibleRecentEntries.first?.weight
     }
     
     private var isValid: Bool {
@@ -174,9 +178,7 @@ struct AddBodyWeightSheet: View {
             try modelContext.save()
             
             if let syncEngine {
-                Task {
-                    await syncEngine.pushBodyWeight(entry)
-                }
+                syncEngine.queueForSync(entry)
             }
             
             dismiss()

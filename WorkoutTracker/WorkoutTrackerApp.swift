@@ -3,6 +3,7 @@ import SwiftData
 
 @main
 struct WorkoutTrackerApp: App {
+    @UIApplicationDelegateAdaptor(WorkoutTrackerAppDelegate.self) private var appDelegate
     let sharedModelContainer: ModelContainer
     let syncEngine: SyncEngine
 
@@ -17,6 +18,7 @@ struct WorkoutTrackerApp: App {
 
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            SyncMetadataMigration.backfill(context: container.mainContext)
             self.sharedModelContainer = container
             self.syncEngine = SyncEngine(modelContext: container.mainContext)
         } catch {

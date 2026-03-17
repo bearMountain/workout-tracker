@@ -42,6 +42,9 @@ struct HomeView: View {
             .navigationTitle("Heavy Duty")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .secondaryAction) {
+                    SyncStatusIndicator()
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task {

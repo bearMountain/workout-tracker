@@ -31,6 +31,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'PUT') {
       const body = req.body as UpdateWorkoutLogInput;
+      if (!body.client_updated_at || !body.idempotency_key) {
+        return res.status(400).json({ error: 'client_updated_at and idempotency_key are required' });
+      }
       
       const existing = await sql<WorkoutLog>`
         SELECT * FROM workout_logs WHERE id = ${id}
@@ -41,6 +44,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const current = existing.rows[0];
+      if (current.last_idempotency_key === body.idempotency_key) {
+        return res.status(200).json(normalizeWorkoutLog(current));
+      }
+
+      if (new Date(String(current.updated_at)).getTime() > new Date(body.client_updated_at).getTime()) {
+        return res.status(200).json(normalizeWorkoutLog(current));
+      }
 
       if (body.feeling !== undefined && (body.feeling < 1 || body.feeling > 4)) {
         return res.status(400).json({ error: 'feeling must be between 1 and 4' });
@@ -53,7 +63,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           actual_reps = ${body.actual_reps ?? current.actual_reps},
           is_machine = ${body.is_machine ?? current.is_machine},
           feeling = ${body.feeling ?? current.feeling},
-          notes = ${body.notes ?? current.notes}
+          notes = ${body.notes ?? current.notes},
+          client_updated_at = ${body.client_updated_at},
+          deleted_at = ${body.deleted_at ?? current.deleted_at ?? null},
+          last_idempotency_key = ${body.idempotency_key},
+          server_version = workout_logs.server_version + 1,
+          updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
         RETURNING *
       `;
@@ -62,15 +77,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'DELETE') {
-      const result = await sql`
-        DELETE FROM workout_logs WHERE id = ${id} RETURNING id
+      const existing = await sql<WorkoutLog>`
+        SELECT * FROM workout_logs WHERE id = ${id}
       `;
 
-      if (result.rows.length === 0) {
+      if (existing.rows.length === 0) {
         return res.status(404).json({ error: 'Workout log not found' });
       }
 
-      return res.status(200).json({ deleted: true, id });
+      const result = await sql<WorkoutLog>`
+        UPDATE workout_logs SET
+          deleted_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP,
+          client_updated_at = CURRENT_TIMESTAMP,
+          server_version = workout_logs.server_version + 1
+        WHERE id = ${id}
+        RETURNING *
+      `;
+
+      return res.status(200).json(normalizeWorkoutLog(result.rows[0]));
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

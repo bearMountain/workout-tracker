@@ -25,14 +25,14 @@ class WorkoutViewModel {
         let descriptor = FetchDescriptor<Exercise>(
             sortBy: [SortDescriptor(\.orderIndex)]
         )
-        exercises = (try? modelContext.fetch(descriptor)) ?? []
+        exercises = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
     }
 
     func fetchRecentLogs() {
         let descriptor = FetchDescriptor<WorkoutLog>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        recentLogs = (try? modelContext.fetch(descriptor)) ?? []
+        recentLogs = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
     }
 
     func exercises(for workoutType: WorkoutType) -> [Exercise] {
@@ -81,17 +81,16 @@ class WorkoutViewModel {
         modelContext.insert(log)
         try? modelContext.save()
         fetchRecentLogs()
-
-        Task {
-            await syncEngine.pushWorkoutLog(log)
-        }
+        syncEngine.queueForSync(log)
     }
 
     func updateExerciseTarget(exercise: Exercise, weight: Double, reps: Int) {
         exercise.targetWeight = weight
         exercise.targetReps = reps
+        exercise.markDirty()
         try? modelContext.save()
         fetchExercises()
+        syncEngine.queueForSync(exercise)
     }
 
     // MARK: - Exercise CRUD
@@ -109,10 +108,7 @@ class WorkoutViewModel {
         modelContext.insert(exercise)
         try? modelContext.save()
         fetchExercises()
-
-        Task {
-            await syncEngine.pushExercise(exercise)
-        }
+        syncEngine.queueForSync(exercise)
     }
 
     func updateExercise(_ exercise: Exercise, name: String, targetWeight: Double, targetReps: Int, notes: String) {
@@ -120,22 +116,19 @@ class WorkoutViewModel {
         exercise.targetWeight = targetWeight
         exercise.targetReps = targetReps
         exercise.notes = notes
+        exercise.markDirty()
         try? modelContext.save()
         fetchExercises()
-
-        Task {
-            await syncEngine.pushExerciseUpdate(exercise)
-        }
+        syncEngine.queueForSync(exercise)
     }
 
     func deleteExercise(_ exercise: Exercise) {
-        let exerciseId = exercise.id.uuidString
-        modelContext.delete(exercise)
+        exercise.markDeleted()
+        exercise.logs?.forEach { $0.markDeleted() }
         try? modelContext.save()
         fetchExercises()
-
-        Task {
-            await syncEngine.deleteExercise(id: exerciseId)
-        }
+        fetchRecentLogs()
+        syncEngine.queueForSync(exercise)
+        exercise.logs?.forEach { syncEngine.queueForSync($0) }
     }
 }

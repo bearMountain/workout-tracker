@@ -16,6 +16,26 @@ export async function initializeDatabase() {
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )
   `;
+  
+  await sql`
+    ALTER TABLE exercises
+    ADD COLUMN IF NOT EXISTS client_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  `;
+  
+  await sql`
+    ALTER TABLE exercises
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE
+  `;
+  
+  await sql`
+    ALTER TABLE exercises
+    ADD COLUMN IF NOT EXISTS server_version INTEGER NOT NULL DEFAULT 1
+  `;
+  
+  await sql`
+    ALTER TABLE exercises
+    ADD COLUMN IF NOT EXISTS last_idempotency_key UUID
+  `;
 
   await sql`
     CREATE TABLE IF NOT EXISTS workout_logs (
@@ -25,15 +45,45 @@ export async function initializeDatabase() {
       actual_weight DECIMAL(10, 2) NOT NULL,
       actual_reps INTEGER NOT NULL,
       is_machine BOOLEAN NOT NULL DEFAULT FALSE,
-      feeling INTEGER NOT NULL CHECK (feeling >= 1 AND feeling <= 5),
+      feeling INTEGER NOT NULL CHECK (feeling >= 1 AND feeling <= 4),
       notes TEXT DEFAULT '',
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      client_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      deleted_at TIMESTAMP WITH TIME ZONE,
+      server_version INTEGER NOT NULL DEFAULT 1,
+      last_idempotency_key UUID
     )
   `;
   
   await sql`
     ALTER TABLE workout_logs
     ADD COLUMN IF NOT EXISTS is_machine BOOLEAN NOT NULL DEFAULT FALSE
+  `;
+  
+  await sql`
+    ALTER TABLE workout_logs
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  `;
+  
+  await sql`
+    ALTER TABLE workout_logs
+    ADD COLUMN IF NOT EXISTS client_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  `;
+  
+  await sql`
+    ALTER TABLE workout_logs
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE
+  `;
+  
+  await sql`
+    ALTER TABLE workout_logs
+    ADD COLUMN IF NOT EXISTS server_version INTEGER NOT NULL DEFAULT 1
+  `;
+  
+  await sql`
+    ALTER TABLE workout_logs
+    ADD COLUMN IF NOT EXISTS last_idempotency_key UUID
   `;
 
   await sql`
@@ -43,8 +93,32 @@ export async function initializeDatabase() {
       body TEXT DEFAULT '',
       url VARCHAR(500) DEFAULT '',
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      client_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      deleted_at TIMESTAMP WITH TIME ZONE,
+      server_version INTEGER NOT NULL DEFAULT 1,
+      last_idempotency_key UUID
     )
+  `;
+  
+  await sql`
+    ALTER TABLE content_notes
+    ADD COLUMN IF NOT EXISTS client_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  `;
+  
+  await sql`
+    ALTER TABLE content_notes
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE
+  `;
+  
+  await sql`
+    ALTER TABLE content_notes
+    ADD COLUMN IF NOT EXISTS server_version INTEGER NOT NULL DEFAULT 1
+  `;
+  
+  await sql`
+    ALTER TABLE content_notes
+    ADD COLUMN IF NOT EXISTS last_idempotency_key UUID
   `;
 
   await sql`
@@ -65,12 +139,58 @@ export async function initializeDatabase() {
       date TIMESTAMP WITH TIME ZONE NOT NULL,
       weight DECIMAL(10, 2) NOT NULL,
       notes TEXT DEFAULT '',
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      client_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      deleted_at TIMESTAMP WITH TIME ZONE,
+      server_version INTEGER NOT NULL DEFAULT 1,
+      last_idempotency_key UUID
     )
+  `;
+  
+  await sql`
+    ALTER TABLE body_weights
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  `;
+  
+  await sql`
+    ALTER TABLE body_weights
+    ADD COLUMN IF NOT EXISTS client_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  `;
+  
+  await sql`
+    ALTER TABLE body_weights
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE
+  `;
+  
+  await sql`
+    ALTER TABLE body_weights
+    ADD COLUMN IF NOT EXISTS server_version INTEGER NOT NULL DEFAULT 1
+  `;
+  
+  await sql`
+    ALTER TABLE body_weights
+    ADD COLUMN IF NOT EXISTS last_idempotency_key UUID
   `;
 
   await sql`
     CREATE INDEX IF NOT EXISTS idx_body_weights_date ON body_weights(date DESC)
+  `;
+  
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_exercises_updated_at ON exercises(updated_at DESC)
+  `;
+  
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_workout_logs_updated_at ON workout_logs(updated_at DESC)
+  `;
+  
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_content_notes_updated_at ON content_notes(updated_at DESC)
+  `;
+  
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_body_weights_updated_at ON body_weights(updated_at DESC)
   `;
 }
 
@@ -88,29 +208,50 @@ export function errorResponse(message: string, status = 400) {
   });
 }
 
+function normalizeSyncFields(row: any) {
+  return {
+    client_updated_at: row.client_updated_at,
+    updated_at: row.updated_at,
+    created_at: row.created_at,
+    deleted_at: row.deleted_at,
+    server_version: Number(row.server_version),
+    last_idempotency_key: row.last_idempotency_key,
+  };
+}
+
 // Convert Postgres DECIMAL strings to numbers to match TypeScript types
-export function normalizeExercise(row: Record<string, unknown>) {
+export function normalizeExercise(row: any) {
   return {
     ...row,
     target_weight: Number(row.target_weight),
     target_reps: Number(row.target_reps),
     order_index: Number(row.order_index),
+    ...normalizeSyncFields(row),
   };
 }
 
-export function normalizeWorkoutLog(row: Record<string, unknown>) {
+export function normalizeWorkoutLog(row: any) {
   return {
     ...row,
     actual_weight: Number(row.actual_weight),
     actual_reps: Number(row.actual_reps),
     is_machine: Boolean(row.is_machine),
     feeling: Number(row.feeling),
+    ...normalizeSyncFields(row),
   };
 }
 
-export function normalizeBodyWeight(row: Record<string, unknown>) {
+export function normalizeBodyWeight(row: any) {
   return {
     ...row,
     weight: Number(row.weight),
+    ...normalizeSyncFields(row),
+  };
+}
+
+export function normalizeContentNote(row: any) {
+  return {
+    ...row,
+    ...normalizeSyncFields(row),
   };
 }

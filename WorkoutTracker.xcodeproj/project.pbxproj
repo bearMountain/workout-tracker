@@ -9,16 +9,19 @@
 /* Begin PBXBuildFile section */
 		APP001 /* WorkoutTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC001 /* WorkoutTrackerApp.swift */; };
 		APP002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC002 /* ContentView.swift */; };
+		APP004 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC030 /* AppDelegate.swift */; };
 		APP003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = RES001 /* Assets.xcassets */; };
 		CMP001 /* ExerciseRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC014 /* ExerciseRow.swift */; };
 		CMP002 /* WorkoutCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC015 /* WorkoutCard.swift */; };
 		CMP003 /* BodyWeightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC022 /* BodyWeightCard.swift */; };
 		CMP004 /* AddBodyWeightSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC023 /* AddBodyWeightSheet.swift */; };
+		CMP005 /* SyncStatusIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC033 /* SyncStatusIndicator.swift */; };
 		MDL001 /* WorkoutType.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC003 /* WorkoutType.swift */; };
 		MDL002 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC004 /* Exercise.swift */; };
 		MDL003 /* WorkoutLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC005 /* WorkoutLog.swift */; };
 		MDL004 /* ContentNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC006 /* ContentNote.swift */; };
 		MDL005 /* BodyWeightEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC024 /* BodyWeightEntry.swift */; };
+		MDL006 /* SyncSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC031 /* SyncSupport.swift */; };
 		PRG001 /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC025 /* ProgressView.swift */; };
 		PRG002 /* ExerciseChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC026 /* ExerciseChartView.swift */; };
 		PRG003 /* BodyWeightChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC027 /* BodyWeightChartView.swift */; };
@@ -26,6 +29,7 @@
 		SVC001 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC018 /* APIClient.swift */; };
 		SVC002 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC019 /* APIModels.swift */; };
 		SVC003 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC029 /* SyncEngine.swift */; };
+		SVC004 /* SyncMetadataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC032 /* SyncMetadataMigration.swift */; };
 		THM001 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC016 /* AppTheme.swift */; };
 		VIW001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC009 /* HomeView.swift */; };
 		VIW002 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC010 /* WorkoutDetailView.swift */; };
@@ -81,6 +85,10 @@
 		SRC027 /* BodyWeightChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightChartView.swift; sourceTree = "<group>"; };
 		SRC028 /* ProgressViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewModel.swift; sourceTree = "<group>"; };
 		SRC029 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		SRC030 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		SRC031 /* SyncSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSupport.swift; sourceTree = "<group>"; };
+		SRC032 /* SyncMetadataMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMetadataMigration.swift; sourceTree = "<group>"; };
+		SRC033 /* SyncStatusIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatusIndicator.swift; sourceTree = "<group>"; };
 		TSF001 /* SyncEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngineTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -114,6 +122,7 @@
 		GRP002 /* WorkoutTracker */ = {
 			isa = PBXGroup;
 			children = (
+				SRC030 /* AppDelegate.swift */,
 				SRC001 /* WorkoutTrackerApp.swift */,
 				SRC002 /* ContentView.swift */,
 				GRP004 /* Models */,
@@ -144,6 +153,7 @@
 				SRC005 /* WorkoutLog.swift */,
 				SRC006 /* ContentNote.swift */,
 				SRC024 /* BodyWeightEntry.swift */,
+				SRC031 /* SyncSupport.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -180,6 +190,7 @@
 				SRC015 /* WorkoutCard.swift */,
 				SRC022 /* BodyWeightCard.swift */,
 				SRC023 /* AddBodyWeightSheet.swift */,
+				SRC033 /* SyncStatusIndicator.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -206,6 +217,7 @@
 				SRC018 /* APIClient.swift */,
 				SRC019 /* APIModels.swift */,
 				SRC029 /* SyncEngine.swift */,
+				SRC032 /* SyncMetadataMigration.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -321,11 +333,13 @@
 			files = (
 				APP001 /* WorkoutTrackerApp.swift in Sources */,
 				APP002 /* ContentView.swift in Sources */,
+				APP004 /* AppDelegate.swift in Sources */,
 				MDL001 /* WorkoutType.swift in Sources */,
 				MDL002 /* Exercise.swift in Sources */,
 				MDL003 /* WorkoutLog.swift in Sources */,
 				MDL004 /* ContentNote.swift in Sources */,
 				MDL005 /* BodyWeightEntry.swift in Sources */,
+				MDL006 /* SyncSupport.swift in Sources */,
 				VWM001 /* WorkoutViewModel.swift in Sources */,
 				VWM002 /* HistoryViewModel.swift in Sources */,
 				VWM003 /* ProgressViewModel.swift in Sources */,
@@ -339,6 +353,7 @@
 				CMP002 /* WorkoutCard.swift in Sources */,
 				CMP003 /* BodyWeightCard.swift in Sources */,
 				CMP004 /* AddBodyWeightSheet.swift in Sources */,
+				CMP005 /* SyncStatusIndicator.swift in Sources */,
 				PRG001 /* ProgressView.swift in Sources */,
 				PRG002 /* ExerciseChartView.swift in Sources */,
 				PRG003 /* BodyWeightChartView.swift in Sources */,
@@ -347,6 +362,7 @@
 				SVC001 /* APIClient.swift in Sources */,
 				SVC002 /* APIModels.swift in Sources */,
 				SVC003 /* SyncEngine.swift in Sources */,
+				SVC004 /* SyncMetadataMigration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

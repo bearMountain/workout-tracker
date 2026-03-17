@@ -54,7 +54,7 @@ class HistoryViewModel {
         let descriptor = FetchDescriptor<WorkoutLog>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        logs = (try? modelContext.fetch(descriptor)) ?? []
+        logs = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
         buildSessions()
     }
 
@@ -96,32 +96,23 @@ class HistoryViewModel {
     }
 
     func deleteLog(_ log: WorkoutLog) {
-        let logId = log.id.uuidString
-        modelContext.delete(log)
+        log.markDeleted()
         try? modelContext.save()
         fetchLogs()
-
-        Task {
-            await syncEngine.deleteWorkoutLog(id: logId)
-        }
+        syncEngine.queueForSync(log)
     }
 
     func deleteSession(_ session: WorkoutSession) {
-        let logIds = session.exercises.flatMap { $0.sets.map { $0.id.uuidString } }
-
         for exerciseSets in session.exercises {
             for log in exerciseSets.sets {
-                modelContext.delete(log)
+                log.markDeleted()
             }
         }
         try? modelContext.save()
         fetchLogs()
-
-        Task {
-            for logId in logIds {
-                await syncEngine.deleteWorkoutLog(id: logId)
-            }
-        }
+        session.exercises
+            .flatMap(\.sets)
+            .forEach { syncEngine.queueForSync($0) }
     }
 
     var workoutDates: Set<Date> {

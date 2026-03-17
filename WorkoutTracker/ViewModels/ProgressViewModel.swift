@@ -60,7 +60,7 @@ class ProgressViewModel {
         let descriptor = FetchDescriptor<Exercise>(
             sortBy: [SortDescriptor(\.orderIndex)]
         )
-        exercises = (try? modelContext.fetch(descriptor)) ?? []
+        exercises = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
         if selectedExercise == nil {
             selectedExercise = exercises.first
         }
@@ -70,15 +70,13 @@ class ProgressViewModel {
         let descriptor = FetchDescriptor<BodyWeightEntry>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        bodyWeightEntries = (try? modelContext.fetch(descriptor)) ?? []
+        bodyWeightEntries = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
     }
 
     // MARK: - Exercise Progress Data
 
     func chartData(for exercise: Exercise) -> [ExerciseDataPoint] {
-        guard let logs = exercise.logs else { return [] }
-
-        let filteredLogs = filterByDateRange(logs)
+        let filteredLogs = filterByDateRange(exercise.activeLogs)
         let grouped = Dictionary(grouping: filteredLogs) { log in
             Calendar.current.startOfDay(for: log.date)
         }
@@ -100,14 +98,16 @@ class ProgressViewModel {
     // MARK: - Exercise Stats
 
     func personalBest(for exercise: Exercise) -> (weight: Double, reps: Int)? {
-        guard let logs = exercise.logs, !logs.isEmpty else { return nil }
+        let logs = exercise.activeLogs
+        guard !logs.isEmpty else { return nil }
         let maxWeight = logs.map(\.actualWeight).max() ?? 0
         let maxReps = logs.filter { $0.actualWeight == maxWeight }.map(\.actualReps).max() ?? 0
         return (maxWeight, maxReps)
     }
 
     func isNewPersonalBest(for exercise: Exercise) -> Bool {
-        guard let logs = exercise.logs, logs.count >= 2 else { return false }
+        let logs = exercise.activeLogs
+        guard logs.count >= 2 else { return false }
         let sorted = logs.sorted { $0.date > $1.date }
         guard let latest = sorted.first else { return false }
         let previousMax = sorted.dropFirst().map(\.actualWeight).max() ?? 0
@@ -180,27 +180,21 @@ class ProgressViewModel {
         modelContext.insert(entry)
         try? modelContext.save()
         fetchBodyWeightEntries()
-
-        Task {
-            await syncEngine.pushBodyWeight(entry)
-        }
+        syncEngine.queueForSync(entry)
     }
 
     func deleteBodyWeight(_ entry: BodyWeightEntry) {
-        let entryId = entry.id.uuidString
-        modelContext.delete(entry)
+        entry.markDeleted()
         try? modelContext.save()
         fetchBodyWeightEntries()
-
-        Task {
-            await syncEngine.deleteBodyWeight(id: entryId)
-        }
+        syncEngine.queueForSync(entry)
     }
 
     // MARK: - Streak Tracking
 
     func workoutStreak(for exercise: Exercise) -> Int {
-        guard let logs = exercise.logs, !logs.isEmpty else { return 0 }
+        let logs = exercise.activeLogs
+        guard !logs.isEmpty else { return 0 }
 
         let sortedDates = logs.map { Calendar.current.startOfDay(for: $0.date) }
             .sorted(by: >)
@@ -278,11 +272,12 @@ class ProgressViewModel {
             return "\(streak) week streak! Consistency is key!"
         }
 
-        if let logs = exercise.logs, logs.count >= 10 {
+        let logs = exercise.activeLogs
+        if logs.count >= 10 {
             return encouragingMessages.randomElement() ?? "Keep going!"
         }
 
-        if let logs = exercise.logs, logs.count >= 5 {
+        if logs.count >= 5 {
             return "Building momentum!"
         }
 

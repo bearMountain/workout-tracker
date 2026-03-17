@@ -26,6 +26,10 @@ enum APIClientError: Error, LocalizedError {
 actor APIClient {
     static let shared = APIClient()
     
+    private static var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+    
     static let dateFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -33,14 +37,27 @@ actor APIClient {
     }()
     
     private let baseURL = "https://workout-tracker-jim-brews-projects.vercel.app"
-    private let session: URLSession
+    private let readSession: URLSession
+    private let syncSession: URLSession
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
     
     private init() {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
-        self.session = URLSession(configuration: config)
+        let readConfig = URLSessionConfiguration.default
+        readConfig.timeoutIntervalForRequest = 30
+        readConfig.waitsForConnectivity = true
+        self.readSession = URLSession(configuration: readConfig)
+        
+        let syncConfig: URLSessionConfiguration
+        if Self.isRunningTests {
+            syncConfig = .default
+        } else {
+            syncConfig = URLSessionConfiguration.background(withIdentifier: "com.gizmo.workouttracker.sync")
+            syncConfig.sessionSendsLaunchEvents = true
+        }
+        syncConfig.timeoutIntervalForRequest = 30
+        syncConfig.waitsForConnectivity = true
+        self.syncSession = URLSession(configuration: syncConfig)
         
         self.decoder = JSONDecoder()
         self.encoder = JSONEncoder()
@@ -48,12 +65,11 @@ actor APIClient {
     
     // MARK: - Exercises
     
-    func fetchExercises(workoutType: String? = nil) async throws -> [APIExercise] {
-        var urlString = "\(baseURL)/api/exercises"
-        if let type = workoutType {
-            urlString += "?workout_type=\(type)"
-        }
-        return try await get(urlString)
+    func fetchExercises(workoutType: String? = nil, since: String? = nil) async throws -> [APIExercise] {
+        return try await get(buildURL(path: "/api/exercises", queryItems: [
+            URLQueryItem(name: "workout_type", value: workoutType),
+            URLQueryItem(name: "since", value: since)
+        ]))
     }
     
     func fetchExercise(id: String) async throws -> APIExercise {
@@ -74,12 +90,12 @@ actor APIClient {
     
     // MARK: - Workout Logs
     
-    func fetchLogs(exerciseId: String? = nil, limit: Int = 50) async throws -> [APIWorkoutLog] {
-        var urlString = "\(baseURL)/api/logs?limit=\(limit)"
-        if let exerciseId = exerciseId {
-            urlString += "&exercise_id=\(exerciseId)"
-        }
-        return try await get(urlString)
+    func fetchLogs(exerciseId: String? = nil, limit: Int = 50, since: String? = nil) async throws -> [APIWorkoutLog] {
+        return try await get(buildURL(path: "/api/logs", queryItems: [
+            URLQueryItem(name: "limit", value: "\(limit)"),
+            URLQueryItem(name: "exercise_id", value: exerciseId),
+            URLQueryItem(name: "since", value: since)
+        ]))
     }
     
     func fetchLog(id: String) async throws -> APIWorkoutLog {
@@ -100,8 +116,11 @@ actor APIClient {
     
     // MARK: - Notes
     
-    func fetchNotes(limit: Int = 50) async throws -> [APIContentNote] {
-        return try await get("\(baseURL)/api/notes?limit=\(limit)")
+    func fetchNotes(limit: Int = 50, since: String? = nil) async throws -> [APIContentNote] {
+        return try await get(buildURL(path: "/api/notes", queryItems: [
+            URLQueryItem(name: "limit", value: "\(limit)"),
+            URLQueryItem(name: "since", value: since)
+        ]))
     }
     
     func fetchNote(id: String) async throws -> APIContentNote {
@@ -122,8 +141,11 @@ actor APIClient {
     
     // MARK: - Body Weights
     
-    func fetchBodyWeights(limit: Int = 50) async throws -> [APIBodyWeight] {
-        return try await get("\(baseURL)/api/body-weights?limit=\(limit)")
+    func fetchBodyWeights(limit: Int = 50, since: String? = nil) async throws -> [APIBodyWeight] {
+        return try await get(buildURL(path: "/api/body-weights", queryItems: [
+            URLQueryItem(name: "limit", value: "\(limit)"),
+            URLQueryItem(name: "since", value: since)
+        ]))
     }
     
     func fetchBodyWeight(id: String) async throws -> APIBodyWeight {
@@ -153,10 +175,10 @@ actor APIClient {
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
-        return try await perform(request)
+        return try await perform(request, using: readSession)
     }
     
-    private func post<T: Decodable, B: Encodable>(_ urlString: String, body: B) async throws -> T {
+    private func post<T: Decodable, B: Encodable & APISyncMutationRequest>(_ urlString: String, body: B) async throws -> T {
         guard let url = URL(string: urlString) else {
             throw APIClientError.invalidURL
         }
@@ -165,12 +187,13 @@ actor APIClient {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(body.idempotencyKey, forHTTPHeaderField: "Idempotency-Key")
         request.httpBody = try encoder.encode(body)
         
-        return try await perform(request)
+        return try await perform(request, using: syncSession)
     }
     
-    private func put<T: Decodable, B: Encodable>(_ urlString: String, body: B) async throws -> T {
+    private func put<T: Decodable, B: Encodable & APISyncMutationRequest>(_ urlString: String, body: B) async throws -> T {
         guard let url = URL(string: urlString) else {
             throw APIClientError.invalidURL
         }
@@ -179,9 +202,10 @@ actor APIClient {
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(body.idempotencyKey, forHTTPHeaderField: "Idempotency-Key")
         request.httpBody = try encoder.encode(body)
         
-        return try await perform(request)
+        return try await perform(request, using: syncSession)
     }
     
     private func delete(_ urlString: String) async throws {
@@ -192,7 +216,7 @@ actor APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await syncSession.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIClientError.invalidResponse
@@ -204,7 +228,7 @@ actor APIClient {
         }
     }
     
-    private func perform<T: Decodable>(_ request: URLRequest) async throws -> T {
+    private func perform<T: Decodable>(_ request: URLRequest, using session: URLSession) async throws -> T {
         let (data, response): (Data, URLResponse)
         
         do {
@@ -239,5 +263,19 @@ actor APIClient {
             }
             throw APIClientError.decodingError(error)
         }
+    }
+    
+    private func buildURL(path: String, queryItems: [URLQueryItem]) throws -> String {
+        guard var components = URLComponents(string: "\(baseURL)\(path)") else {
+            throw APIClientError.invalidURL
+        }
+        components.queryItems = queryItems.filter {
+            guard let value = $0.value else { return false }
+            return !value.isEmpty
+        }
+        guard let url = components.url else {
+            throw APIClientError.invalidURL
+        }
+        return url.absoluteString
     }
 }

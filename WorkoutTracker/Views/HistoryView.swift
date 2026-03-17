@@ -32,6 +32,9 @@ struct HistoryView: View {
             .navigationTitle("History")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .secondaryAction) {
+                    SyncStatusIndicator()
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task {

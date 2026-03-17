@@ -33,6 +33,11 @@ struct ProgressTabView: View {
                 }
             }
             .navigationTitle("Progress")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    SyncStatusIndicator()
+                }
+            }
             .onAppear {
                 if viewModel == nil, let syncEngine {
                     viewModel = ProgressViewModel(modelContext: modelContext, syncEngine: syncEngine)

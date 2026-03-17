@@ -7,13 +7,17 @@ struct BodyWeightCard: View {
     @State private var showAddSheet = false
     var syncEngine: SyncEngine?
     
+    private var visibleEntries: [BodyWeightEntry] {
+        bodyWeightEntries.filter { !$0.isDeleted }
+    }
+    
     private var latestEntry: BodyWeightEntry? {
-        bodyWeightEntries.first
+        visibleEntries.first
     }
     
     private var trend: Double? {
-        guard bodyWeightEntries.count >= 2 else { return nil }
-        let sorted = bodyWeightEntries.sorted { $0.date < $1.date }
+        guard visibleEntries.count >= 2 else { return nil }
+        let sorted = visibleEntries.sorted { $0.date < $1.date }
         guard let first = sorted.first, let last = sorted.last else { return nil }
         guard first.weight > 0 else { return nil }
         return ((last.weight - first.weight) / first.weight) * 100

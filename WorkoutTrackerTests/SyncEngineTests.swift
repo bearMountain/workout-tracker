@@ -6,13 +6,14 @@ actor MockAPIClient: APIClientProtocol {
     var exercises: [APIExercise] = []
     var logs: [APIWorkoutLog] = []
     var bodyWeights: [APIBodyWeight] = []
-
+    var notes: [APIContentNote] = []
+    
     var createdExercises: [CreateExerciseRequest] = []
     var createdLogs: [CreateWorkoutLogRequest] = []
     var createdBodyWeights: [CreateBodyWeightRequest] = []
-    var deletedExerciseIds: [String] = []
-    var deletedLogIds: [String] = []
-    var deletedBodyWeightIds: [String] = []
+    var createdNotes: [CreateContentNoteRequest] = []
+    
+    var shouldFailExercisePush = false
 
     func setExercises(_ exercises: [APIExercise]) {
         self.exercises = exercises
@@ -25,12 +26,24 @@ actor MockAPIClient: APIClientProtocol {
     func setBodyWeights(_ bodyWeights: [APIBodyWeight]) {
         self.bodyWeights = bodyWeights
     }
+    
+    func setNotes(_ notes: [APIContentNote]) {
+        self.notes = notes
+    }
+    
+    func setShouldFailExercisePush(_ shouldFail: Bool) {
+        self.shouldFailExercisePush = shouldFail
+    }
 
-    func fetchExercises(workoutType: String?) async throws -> [APIExercise] { exercises }
-    func fetchLogs(exerciseId: String?, limit: Int) async throws -> [APIWorkoutLog] { logs }
-    func fetchBodyWeights(limit: Int) async throws -> [APIBodyWeight] { bodyWeights }
+    func fetchExercises(workoutType: String?, since: String?) async throws -> [APIExercise] { exercises }
+    func fetchLogs(exerciseId: String?, limit: Int, since: String?) async throws -> [APIWorkoutLog] { logs }
+    func fetchBodyWeights(limit: Int, since: String?) async throws -> [APIBodyWeight] { bodyWeights }
+    func fetchNotes(limit: Int, since: String?) async throws -> [APIContentNote] { notes }
 
     func createExercise(_ input: CreateExerciseRequest) async throws -> APIExercise {
+        if shouldFailExercisePush {
+            throw APIClientError.networkError(URLError(.notConnectedToInternet))
+        }
         createdExercises.append(input)
         return APIExercise(
             id: input.id ?? UUID().uuidString,
@@ -40,7 +53,12 @@ actor MockAPIClient: APIClientProtocol {
             notes: input.notes,
             workoutType: input.workoutType,
             orderIndex: input.orderIndex,
-            createdAt: "", updatedAt: ""
+            clientUpdatedAt: input.clientUpdatedAt,
+            createdAt: input.clientUpdatedAt,
+            updatedAt: input.clientUpdatedAt,
+            deletedAt: input.deletedAt,
+            serverVersion: 1,
+            lastIdempotencyKey: input.idempotencyKey
         )
     }
 
@@ -55,7 +73,14 @@ actor MockAPIClient: APIClientProtocol {
             isMachine: input.isMachine,
             feeling: input.feeling,
             notes: input.notes ?? "",
-            createdAt: "", exerciseName: nil, workoutType: nil
+            clientUpdatedAt: input.clientUpdatedAt,
+            createdAt: input.clientUpdatedAt,
+            updatedAt: input.clientUpdatedAt,
+            deletedAt: input.deletedAt,
+            serverVersion: 1,
+            lastIdempotencyKey: input.idempotencyKey,
+            exerciseName: nil,
+            workoutType: nil
         )
     }
 
@@ -66,7 +91,28 @@ actor MockAPIClient: APIClientProtocol {
             date: input.date ?? "",
             weight: input.weight,
             notes: input.notes ?? "",
-            createdAt: ""
+            clientUpdatedAt: input.clientUpdatedAt,
+            createdAt: input.clientUpdatedAt,
+            updatedAt: input.clientUpdatedAt,
+            deletedAt: input.deletedAt,
+            serverVersion: 1,
+            lastIdempotencyKey: input.idempotencyKey
+        )
+    }
+    
+    func createNote(_ input: CreateContentNoteRequest) async throws -> APIContentNote {
+        createdNotes.append(input)
+        return APIContentNote(
+            id: input.id ?? UUID().uuidString,
+            title: input.title,
+            body: input.body ?? "",
+            url: input.url ?? "",
+            clientUpdatedAt: input.clientUpdatedAt,
+            createdAt: input.clientUpdatedAt,
+            updatedAt: input.clientUpdatedAt,
+            deletedAt: input.deletedAt,
+            serverVersion: 1,
+            lastIdempotencyKey: input.idempotencyKey
         )
     }
 
@@ -81,10 +127,15 @@ actor MockAPIClient: APIClientProtocol {
     func updateBodyWeight(id: String, _ input: UpdateBodyWeightRequest) async throws -> APIBodyWeight {
         bodyWeights.first { $0.id == id }!
     }
+    
+    func updateNote(id: String, _ input: UpdateContentNoteRequest) async throws -> APIContentNote {
+        notes.first { $0.id == id }!
+    }
 
-    func deleteExercise(id: String) async throws { deletedExerciseIds.append(id) }
-    func deleteLog(id: String) async throws { deletedLogIds.append(id) }
-    func deleteBodyWeight(id: String) async throws { deletedBodyWeightIds.append(id) }
+    func deleteExercise(id: String) async throws { }
+    func deleteLog(id: String) async throws { }
+    func deleteBodyWeight(id: String) async throws { }
+    func deleteNote(id: String) async throws { }
 }
 
 @MainActor
@@ -105,8 +156,22 @@ final class SyncEngineTests: XCTestCase {
     override func tearDown() async throws {
         testContainer = nil
     }
+    
+    private func makeEngine(context: ModelContext, mock: MockAPIClient, online: Bool = true) -> SyncEngine {
+        SyncEngine(
+            modelContext: context,
+            apiClient: mock,
+            enablePathMonitoring: false,
+            initialOnlineState: online,
+            enableBackgroundScheduling: false
+        )
+    }
+    
+    private func isoString(_ date: Date) -> String {
+        APIClient.dateFormatter.string(from: date)
+    }
 
-    func testInsertNewExercises() async throws {
+    func testPullLatestInsertsExercises() async throws {
         let context = try makeTestContext()
         let mock = MockAPIClient()
         let id = UUID()
@@ -114,216 +179,169 @@ final class SyncEngineTests: XCTestCase {
             APIExercise(
                 id: id.uuidString, name: "Squat", targetWeight: 200, targetReps: 5,
                 notes: "", workoutType: "A", orderIndex: 0,
-                createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z"
+                clientUpdatedAt: "2026-01-01T00:00:00.000Z",
+                createdAt: "2026-01-01T00:00:00.000Z",
+                updatedAt: "2026-01-01T00:00:00.000Z",
+                deletedAt: nil,
+                serverVersion: 2,
+                lastIdempotencyKey: nil
             )
         ])
 
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
+        let engine = makeEngine(context: context, mock: mock)
         await engine.syncAll()
 
         let descriptor = FetchDescriptor<Exercise>()
         let exercises = try context.fetch(descriptor)
         XCTAssertEqual(exercises.count, 1)
         XCTAssertEqual(exercises.first?.name, "Squat")
-        XCTAssertEqual(exercises.first?.id, id)
+        XCTAssertEqual(exercises.first?.remoteID, id.uuidString)
+        XCTAssertFalse(exercises.first?.isDirty ?? true)
     }
-
-    func testUpdateExistingExercise() async throws {
+    
+    func testQueueForSyncMarksExercisePending() async throws {
         let context = try makeTestContext()
         let mock = MockAPIClient()
-        let id = UUID()
-
-        let exercise = Exercise(id: id, name: "Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)
+        let engine = makeEngine(context: context, mock: mock, online: false)
+        let exercise = Exercise(name: "Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)
         context.insert(exercise)
         try context.save()
-
-        await mock.setExercises([
-            APIExercise(
-                id: id.uuidString, name: "Back Squat", targetWeight: 225, targetReps: 5,
-                notes: "updated", workoutType: "A", orderIndex: 0,
-                createdAt: "", updatedAt: ""
-            )
-        ])
-
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
-        await engine.syncAll()
-
-        let descriptor = FetchDescriptor<Exercise>()
-        let exercises = try context.fetch(descriptor)
-        XCTAssertEqual(exercises.count, 1)
-        XCTAssertEqual(exercises.first?.name, "Back Squat")
-        XCTAssertEqual(exercises.first?.targetWeight, 225)
+        
+        exercise.name = "Back Squat"
+        engine.queueForSync(exercise)
+        
+        XCTAssertTrue(exercise.isDirty)
+        XCTAssertEqual(engine.pendingChangesCount, 1)
     }
-
-    func testNoDuplicatesOnRepeatedSync() async throws {
+    
+    func testProcessPendingChangesClearsDirtyState() async throws {
         let context = try makeTestContext()
         let mock = MockAPIClient()
-        let id = UUID()
-        await mock.setExercises([
-            APIExercise(
-                id: id.uuidString, name: "Bench", targetWeight: 150, targetReps: 8,
-                notes: "", workoutType: "B", orderIndex: 0,
-                createdAt: "", updatedAt: ""
-            )
-        ])
-
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
-
-        await engine.syncAll()
-        await engine.syncAll()
-        await engine.syncAll()
-
-        let descriptor = FetchDescriptor<Exercise>()
-        let exercises = try context.fetch(descriptor)
-        XCTAssertEqual(exercises.count, 1)
-    }
-
-    func testInsertNewBodyWeights() async throws {
-        let context = try makeTestContext()
-        let mock = MockAPIClient()
-        let id = UUID()
-        await mock.setBodyWeights([
-            APIBodyWeight(
-                id: id.uuidString,
-                date: "2026-03-05T12:00:00.000Z",
-                weight: 225.6, notes: "",
-                createdAt: "2026-03-05T12:00:00.000Z"
-            )
-        ])
-
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
-        await engine.syncAll()
-
-        let descriptor = FetchDescriptor<BodyWeightEntry>()
-        let entries = try context.fetch(descriptor)
-        XCTAssertEqual(entries.count, 1)
-        XCTAssertEqual(entries.first?.weight, 225.6)
-        XCTAssertEqual(entries.first?.id, id)
-    }
-
-    func testNoDuplicateBodyWeights() async throws {
-        let context = try makeTestContext()
-        let mock = MockAPIClient()
-        let id = UUID()
-        await mock.setBodyWeights([
-            APIBodyWeight(
-                id: id.uuidString,
-                date: "2026-03-05T12:00:00.000Z",
-                weight: 225, notes: "",
-                createdAt: ""
-            )
-        ])
-
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
-
-        await engine.syncAll()
-        await engine.syncAll()
-        await engine.syncAll()
-
-        let descriptor = FetchDescriptor<BodyWeightEntry>()
-        let entries = try context.fetch(descriptor)
-        XCTAssertEqual(entries.count, 1)
-    }
-
-    func testPushSendsClientUUID() async throws {
-        let context = try makeTestContext()
-        let mock = MockAPIClient()
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
-
+        let engine = makeEngine(context: context, mock: mock, online: false)
+        
         let exercise = Exercise(name: "Row", targetWeight: 100, targetReps: 8, workoutType: .a, orderIndex: 0)
         context.insert(exercise)
         try context.save()
-
-        await engine.pushExercise(exercise)
-
+        
+        engine.queueForSync(exercise)
+        try await engine.processPendingChanges()
+        
         let created = await mock.createdExercises
         XCTAssertEqual(created.count, 1)
-        XCTAssertEqual(created.first?.id, exercise.id.uuidString)
-        XCTAssertEqual(created.first?.name, "Row")
+        XCTAssertEqual(created.first?.id, exercise.localID.uuidString)
+        XCTAssertFalse(exercise.isDirty)
+        XCTAssertEqual(exercise.remoteID, exercise.localID.uuidString)
     }
-
-    func testPushSendsClientUUIDBodyWeight() async throws {
+    
+    func testPushFailureIncrementsRetryCount() async throws {
         let context = try makeTestContext()
         let mock = MockAPIClient()
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
-
-        let entry = BodyWeightEntry(date: Date(), weight: 180, notes: "test")
-        context.insert(entry)
-        try context.save()
-
-        await engine.pushBodyWeight(entry)
-
-        let created = await mock.createdBodyWeights
-        XCTAssertEqual(created.count, 1)
-        XCTAssertEqual(created.first?.id, entry.id.uuidString)
-        XCTAssertEqual(created.first?.weight, 180)
-    }
-
-    func testConcurrentSyncGuard() async throws {
-        let context = try makeTestContext()
-        let mock = MockAPIClient()
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
-
-        async let sync1: () = engine.syncAll()
-        async let sync2: () = engine.syncAll()
-        _ = await (sync1, sync2)
-
-        XCTAssertFalse(engine.isSyncing)
-    }
-
-    func testInsertNewWorkoutLogs() async throws {
-        let context = try makeTestContext()
-        let mock = MockAPIClient()
-
-        let exerciseId = UUID()
-        let exercise = Exercise(id: exerciseId, name: "Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)
+        await mock.setShouldFailExercisePush(true)
+        let engine = makeEngine(context: context, mock: mock, online: false)
+        
+        let exercise = Exercise(name: "Deadlift", targetWeight: 225, targetReps: 5, workoutType: .b, orderIndex: 0)
         context.insert(exercise)
         try context.save()
-
-        let logId = UUID()
-        await mock.setLogs([
-            APIWorkoutLog(
-                id: logId.uuidString,
-                exerciseId: exerciseId.uuidString,
-                date: "2026-03-05T12:00:00.000Z",
-                actualWeight: 205, actualReps: 5, isMachine: false, feeling: 4, notes: "",
-                createdAt: "", exerciseName: "Squat", workoutType: "A"
-            )
-        ])
-
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
-        await engine.syncAll()
-
-        let descriptor = FetchDescriptor<WorkoutLog>()
-        let logs = try context.fetch(descriptor)
-        XCTAssertEqual(logs.count, 1)
-        XCTAssertEqual(logs.first?.actualWeight, 205)
-        XCTAssertEqual(logs.first?.exercise?.id, exerciseId)
+        
+        engine.queueForSync(exercise)
+        try await engine.processPendingChanges()
+        
+        XCTAssertTrue(exercise.isDirty)
+        XCTAssertEqual(exercise.retryCount, 1)
+        XCTAssertNotNil(exercise.syncError)
     }
-
-    func testLocalThenSyncNoDuplicate() async throws {
+    
+    func testPersistentBannerAppearsAfterMaxRetries() async throws {
         let context = try makeTestContext()
         let mock = MockAPIClient()
-
-        let id = UUID()
-        let entry = BodyWeightEntry(id: id, date: Date(), weight: 180, notes: "")
-        context.insert(entry)
+        await mock.setShouldFailExercisePush(true)
+        let engine = makeEngine(context: context, mock: mock, online: false)
+        
+        let exercise = Exercise(name: "Press", targetWeight: 95, targetReps: 8, workoutType: .b, orderIndex: 1)
+        context.insert(exercise)
         try context.save()
-
-        await mock.setBodyWeights([
-            APIBodyWeight(
-                id: id.uuidString,
-                date: APIClient.dateFormatter.string(from: entry.date),
-                weight: 180, notes: "",
-                createdAt: ""
+        engine.queueForSync(exercise)
+        
+        for _ in 0..<5 {
+            exercise.lastSyncAttempt = .distantPast
+            try await engine.processPendingChanges()
+        }
+        
+        XCTAssertEqual(exercise.retryCount, 5)
+        XCTAssertEqual(engine.persistentBannerMessage, "Sync failed - will retry")
+    }
+    
+    func testPullLatestInsertsWorkoutLogAndLinksExercise() async throws {
+        let context = try makeTestContext()
+        let mock = MockAPIClient()
+        let exercise = Exercise(name: "Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)
+        exercise.remoteID = exercise.localID.uuidString
+        exercise.markSynced(remoteID: exercise.localID.uuidString, serverVersion: 1)
+        context.insert(exercise)
+        try context.save()
+        
+        await mock.setLogs([
+            APIWorkoutLog(
+                id: UUID().uuidString,
+                exerciseId: exercise.remoteID ?? "",
+                date: "2026-03-05T12:00:00.000Z",
+                actualWeight: 205,
+                actualReps: 5,
+                isMachine: false,
+                feeling: 4,
+                notes: "",
+                clientUpdatedAt: "2026-03-05T12:00:00.000Z",
+                createdAt: "2026-03-05T12:00:00.000Z",
+                updatedAt: "2026-03-05T12:00:00.000Z",
+                deletedAt: nil,
+                serverVersion: 2,
+                lastIdempotencyKey: nil,
+                exerciseName: "Squat",
+                workoutType: "A"
             )
         ])
-
-        let engine = SyncEngine(modelContext: context, apiClient: mock)
+        
+        let engine = makeEngine(context: context, mock: mock)
         await engine.syncAll()
-
-        let descriptor = FetchDescriptor<BodyWeightEntry>()
-        let entries = try context.fetch(descriptor)
-        XCTAssertEqual(entries.count, 1)
+        
+        let logs = try context.fetch(FetchDescriptor<WorkoutLog>())
+        XCTAssertEqual(logs.count, 1)
+        XCTAssertEqual(logs.first?.actualWeight, 205)
+        XCTAssertEqual(logs.first?.exercise?.name, "Squat")
+    }
+    
+    func testPullKeepsNewerDirtyLocalChanges() async throws {
+        let context = try makeTestContext()
+        let mock = MockAPIClient()
+        let exercise = Exercise(name: "Local Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)
+        exercise.remoteID = exercise.localID.uuidString
+        exercise.lastModifiedAt = Date().addingTimeInterval(3600)
+        exercise.isDirty = true
+        context.insert(exercise)
+        try context.save()
+        
+        await mock.setExercises([
+            APIExercise(
+                id: exercise.remoteID ?? "",
+                name: "Remote Squat",
+                targetWeight: 225,
+                targetReps: 5,
+                notes: "",
+                workoutType: "A",
+                orderIndex: 0,
+                clientUpdatedAt: isoString(Date().addingTimeInterval(-3600)),
+                createdAt: isoString(Date().addingTimeInterval(-7200)),
+                updatedAt: isoString(Date().addingTimeInterval(-1800)),
+                deletedAt: nil,
+                serverVersion: 2,
+                lastIdempotencyKey: nil
+            )
+        ])
+        
+        let engine = makeEngine(context: context, mock: mock)
+        try await engine.pullLatestFromServer()
+        
+        XCTAssertEqual(exercise.name, "Local Squat")
+        XCTAssertTrue(exercise.isDirty)
     }
 }

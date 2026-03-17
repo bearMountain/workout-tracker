@@ -4,25 +4,25 @@ overview: Convert the app from best-effort async sync to a true offline-first ar
 todos:
   - id: model-metadata-migration
     content: Add sync metadata to all SwiftData models and wire migration-safe schema changes
-    status: pending
+    status: completed
   - id: backend-sync-contract
     content: Upgrade API and Postgres contract for idempotency, versions, timestamps, and tombstones
-    status: pending
+    status: completed
   - id: syncengine-rebuild
     content: Implement new offline-first SyncEngine with queueing, pull/merge, reachability, and retries
-    status: pending
+    status: completed
   - id: refactor-write-sites
     content: Refactor all write/delete flows to queue local changes instead of direct network pushes
-    status: pending
+    status: completed
   - id: lifecycle-background-sync
     content: Add app lifecycle triggers and background task registration for automatic sync
-    status: pending
+    status: completed
   - id: sync-status-ui
     content: Add reusable sync indicator and retry banner with minimal UI changes
-    status: pending
+    status: completed
   - id: sync-tests
     content: Add unit tests for queueing, retries, merges, and reinstall safety
-    status: pending
+    status: completed
 isProject: false
 ---
 

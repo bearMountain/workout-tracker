@@ -3,15 +3,20 @@ import SwiftData
 
 struct NotesView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(SyncEngine.self) private var syncEngine: SyncEngine?
     @Query(sort: \ContentNote.updatedAt, order: .reverse) private var notes: [ContentNote]
     
     @State private var showingAddNote = false
     @State private var selectedNote: ContentNote?
     
+    private var visibleNotes: [ContentNote] {
+        notes.filter { !$0.isDeleted }
+    }
+    
     var body: some View {
         NavigationStack {
             Group {
-                if notes.isEmpty {
+                if visibleNotes.isEmpty {
                     emptyState
                 } else {
                     notesList
@@ -21,6 +26,9 @@ struct NotesView: View {
             .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .secondaryAction) {
+                    SyncStatusIndicator()
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showingAddNote = true
@@ -74,7 +82,7 @@ struct NotesView: View {
     private var notesList: some View {
         ScrollView {
             LazyVStack(spacing: AppTheme.spacing) {
-                ForEach(notes) { note in
+                ForEach(visibleNotes) { note in
                     NoteRow(note: note) {
                         selectedNote = note
                     }
@@ -95,6 +103,7 @@ struct NotesView: View {
         let note = ContentNote(title: title, body: body, urlString: url)
         modelContext.insert(note)
         try? modelContext.save()
+        syncEngine?.queueForSync(note)
     }
     
     private func updateNote(_ note: ContentNote, title: String, body: String, url: String) {
@@ -102,12 +111,15 @@ struct NotesView: View {
         note.body = body
         note.urlString = url
         note.updatedAt = Date()
+        note.markDirty(at: note.updatedAt)
         try? modelContext.save()
+        syncEngine?.queueForSync(note)
     }
     
     private func deleteNote(_ note: ContentNote) {
-        modelContext.delete(note)
+        note.markDeleted()
         try? modelContext.save()
+        syncEngine?.queueForSync(note)
     }
 }
 
