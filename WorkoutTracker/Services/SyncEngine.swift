@@ -232,6 +232,7 @@ final class SyncEngine {
                     name: item.name,
                     targetWeight: item.targetWeight,
                     targetReps: item.targetReps,
+                    isMachine: item.isMachine,
                     notes: item.notes,
                     workoutType: item.workoutType.rawValue,
                     orderIndex: item.orderIndex,
@@ -339,6 +340,7 @@ final class SyncEngine {
                 existing.name = remote.name
                 existing.targetWeight = remote.targetWeight
                 existing.targetReps = remote.targetReps
+                existing.isMachine = remote.isMachine ?? existing.isMachine
                 existing.notes = remote.notes
                 existing.workoutType = WorkoutType(rawValue: remote.workoutType) ?? .a
                 existing.orderIndex = remote.orderIndex
@@ -353,6 +355,7 @@ final class SyncEngine {
                     name: remote.name,
                     targetWeight: remote.targetWeight,
                     targetReps: remote.targetReps,
+                    isMachine: remote.isMachine ?? false,
                     notes: remote.notes,
                     workoutType: WorkoutType(rawValue: remote.workoutType) ?? .a,
                     orderIndex: remote.orderIndex

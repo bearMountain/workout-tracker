@@ -58,6 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           name = ${body.name ?? current.name},
           target_weight = ${body.target_weight ?? current.target_weight},
           target_reps = ${body.target_reps ?? current.target_reps},
+          is_machine = ${body.is_machine ?? current.is_machine},
           notes = ${body.notes ?? current.notes},
           workout_type = ${body.workout_type ?? current.workout_type},
           order_index = ${body.order_index ?? current.order_index},

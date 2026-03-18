@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct WorkoutDetailView: View {
+    @Environment(\.editMode) private var editMode
     let workoutType: WorkoutType
     @Bindable var viewModel: WorkoutViewModel
     
@@ -14,24 +15,34 @@ struct WorkoutDetailView: View {
     var exercises: [Exercise] {
         viewModel.exercises(for: workoutType)
     }
+
+    private var isReordering: Bool {
+        editMode?.wrappedValue.isEditing == true
+    }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: AppTheme.spacing) {
-                headerSection
-                
-                if exercises.isEmpty {
-                    emptyState
-                } else {
-                    exercisesList
-                }
+        Group {
+            if exercises.isEmpty {
+                emptyState
+            } else {
+                exercisesList
             }
-            .padding()
         }
         .background(AppTheme.background)
-        .navigationTitle(workoutType.displayName)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                EditButton()
+                    .foregroundStyle(AppTheme.accent)
+            }
+
+            ToolbarItem(placement: .principal) {
+                Text(workoutType.displayName)
+                    .font(.headline)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     showingAddSheet = true
@@ -96,32 +107,47 @@ struct WorkoutDetailView: View {
     }
     
     private var exercisesList: some View {
-        VStack(spacing: AppTheme.spacing) {
+        List {
             ForEach(exercises) { exercise in
-                ExerciseRow(exercise: exercise) {
-                    exerciseToLog = exercise
+                ExerciseRow(
+                    exercise: exercise,
+                    isReordering: isReordering
+                ) {
+                    if !isReordering {
+                        exerciseToLog = exercise
+                    }
                 }
                 .contextMenu {
-                    Button {
-                        exerciseToEdit = exercise
-                    } label: {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                    
-                    Button(role: .destructive) {
-                        exerciseToDelete = exercise
-                        showingDeleteConfirmation = true
-                    } label: {
-                        Label("Delete", systemImage: "trash")
+                    if !isReordering {
+                        Button {
+                            exerciseToEdit = exercise
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        
+                        Button(role: .destructive) {
+                            exerciseToDelete = exercise
+                            showingDeleteConfirmation = true
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     }
                 }
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+            .onMove { source, destination in
+                viewModel.moveExercises(in: workoutType, fromOffsets: source, toOffset: destination)
             }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
     }
 }
 
 #Preview {
-    let container = try! ModelContainer(for: Exercise.self, WorkoutLog.self)
+    let container = try! WorkoutTrackerModelContainerFactory.makeInMemoryContainer()
     let context = container.mainContext
     let syncEngine = SyncEngine(modelContext: context)
     return NavigationStack {

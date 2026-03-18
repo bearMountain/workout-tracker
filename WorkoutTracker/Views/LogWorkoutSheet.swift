@@ -21,10 +21,11 @@ struct LogWorkoutSheet: View {
         if let lastLog = exercise.latestLog {
             _weightText = State(initialValue: Self.weightText(for: lastLog.actualWeight))
             _reps = State(initialValue: lastLog.actualReps)
-            _isMachine = State(initialValue: lastLog.isMachine)
+            _isMachine = State(initialValue: exercise.isMachine || lastLog.isMachine)
         } else {
             _weightText = State(initialValue: Self.weightText(for: exercise.targetWeight))
             _reps = State(initialValue: exercise.targetReps)
+            _isMachine = State(initialValue: exercise.isMachine)
         }
     }
     
@@ -209,8 +210,8 @@ struct LogWorkoutSheet: View {
     private var feelingOptions: [(value: Int, label: String)] {
         [
             (1, "warmup"),
-            (2, "easy work"),
-            (3, "hard but got it"),
+            (2, "medium"),
+            (3, "hard"),
             (4, "0 RIR")
         ]
     }
@@ -243,7 +244,8 @@ struct LogWorkoutSheet: View {
     }
     
     private var targetWeightLabel: String {
-        exercise.targetWeight == 0 ? "BW" : "\(Int(exercise.targetWeight)) lbs"
+        let baseLabel = exercise.targetWeight == 0 ? "BW" : Self.weightText(for: exercise.targetWeight) + " lbs"
+        return exercise.isMachine ? "\(baseLabel) (Machine)" : baseLabel
     }
     
     private var floatingSaveButton: some View {
@@ -290,7 +292,7 @@ struct LogWorkoutSheet: View {
         workoutType: .a
     )
     
-    let container = try! ModelContainer(for: Exercise.self, WorkoutLog.self)
+    let container = try! WorkoutTrackerModelContainerFactory.makeInMemoryContainer()
     let context = container.mainContext
     let syncEngine = SyncEngine(modelContext: context)
     LogWorkoutSheet(

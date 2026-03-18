@@ -62,6 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             name = ${body.name},
             target_weight = ${body.target_weight || 0},
             target_reps = ${body.target_reps || 0},
+            is_machine = ${body.is_machine ?? false},
             notes = ${body.notes || ''},
             workout_type = ${body.workout_type},
             order_index = ${body.order_index || 0},
@@ -75,12 +76,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         `;
       } else {
         result = await sql<Exercise>`
-          INSERT INTO exercises (id, name, target_weight, target_reps, notes, workout_type, order_index, client_updated_at, deleted_at, server_version, last_idempotency_key)
+          INSERT INTO exercises (id, name, target_weight, target_reps, is_machine, notes, workout_type, order_index, client_updated_at, deleted_at, server_version, last_idempotency_key)
           VALUES (
             COALESCE(${body.id ?? null}, gen_random_uuid()),
             ${body.name},
             ${body.target_weight || 0},
             ${body.target_reps || 0},
+            ${body.is_machine ?? false},
             ${body.notes || ''},
             ${body.workout_type},
             ${body.order_index || 0},

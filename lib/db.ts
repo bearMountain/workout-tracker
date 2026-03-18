@@ -225,6 +225,7 @@ export function normalizeExercise(row: any) {
     ...row,
     target_weight: Number(row.target_weight),
     target_reps: Number(row.target_reps),
+    is_machine: Boolean(row.is_machine),
     order_index: Number(row.order_index),
     ...normalizeSyncFields(row),
   };

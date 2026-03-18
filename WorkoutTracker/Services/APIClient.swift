@@ -26,10 +26,6 @@ enum APIClientError: Error, LocalizedError {
 actor APIClient {
     static let shared = APIClient()
     
-    private static var isRunningTests: Bool {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-    }
-    
     static let dateFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -48,13 +44,10 @@ actor APIClient {
         readConfig.waitsForConnectivity = true
         self.readSession = URLSession(configuration: readConfig)
         
-        let syncConfig: URLSessionConfiguration
-        if Self.isRunningTests {
-            syncConfig = .default
-        } else {
-            syncConfig = URLSessionConfiguration.background(withIdentifier: "com.gizmo.workouttracker.sync")
-            syncConfig.sessionSendsLaunchEvents = true
-        }
+        // BGTaskScheduler already gives us background execution time.
+        // Using a background URLSession here would require delegate-based
+        // transfer APIs; async `data(for:)` crashes with background sessions.
+        let syncConfig = URLSessionConfiguration.default
         syncConfig.timeoutIntervalForRequest = 30
         syncConfig.waitsForConnectivity = true
         self.syncSession = URLSession(configuration: syncConfig)

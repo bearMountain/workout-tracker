@@ -17,6 +17,7 @@ struct APIExercise: Codable {
     let name: String
     let targetWeight: Double
     let targetReps: Int
+    let isMachine: Bool?
     let notes: String
     let workoutType: String
     let orderIndex: Int
@@ -31,6 +32,7 @@ struct APIExercise: Codable {
         case id, name, notes
         case targetWeight = "target_weight"
         case targetReps = "target_reps"
+        case isMachine = "is_machine"
         case workoutType = "workout_type"
         case orderIndex = "order_index"
         case clientUpdatedAt = "client_updated_at"
@@ -47,6 +49,7 @@ struct CreateExerciseRequest: Codable, APISyncMutationRequest {
     let name: String
     let targetWeight: Double
     let targetReps: Int
+    let isMachine: Bool
     let notes: String
     let workoutType: String
     let orderIndex: Int
@@ -58,6 +61,7 @@ struct CreateExerciseRequest: Codable, APISyncMutationRequest {
         case id, name, notes
         case targetWeight = "target_weight"
         case targetReps = "target_reps"
+        case isMachine = "is_machine"
         case workoutType = "workout_type"
         case orderIndex = "order_index"
         case clientUpdatedAt = "client_updated_at"
@@ -70,6 +74,7 @@ struct UpdateExerciseRequest: Codable, APISyncMutationRequest {
     let name: String?
     let targetWeight: Double?
     let targetReps: Int?
+    let isMachine: Bool?
     let notes: String?
     let workoutType: String?
     let orderIndex: Int?
@@ -81,6 +86,7 @@ struct UpdateExerciseRequest: Codable, APISyncMutationRequest {
         case name, notes
         case targetWeight = "target_weight"
         case targetReps = "target_reps"
+        case isMachine = "is_machine"
         case workoutType = "workout_type"
         case orderIndex = "order_index"
         case clientUpdatedAt = "client_updated_at"

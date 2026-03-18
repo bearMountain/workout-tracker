@@ -22,6 +22,8 @@
 		MDL004 /* ContentNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC006 /* ContentNote.swift */; };
 		MDL005 /* BodyWeightEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC024 /* BodyWeightEntry.swift */; };
 		MDL006 /* SyncSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC031 /* SyncSupport.swift */; };
+		MDL007 /* WorkoutTrackerSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC035 /* WorkoutTrackerSchema.swift */; };
+		MDL008 /* WorkoutTrackerMigrationPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC036 /* WorkoutTrackerMigrationPlan.swift */; };
 		PRG001 /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC025 /* ProgressView.swift */; };
 		PRG002 /* ExerciseChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC026 /* ExerciseChartView.swift */; };
 		PRG003 /* BodyWeightChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC027 /* BodyWeightChartView.swift */; };
@@ -42,6 +44,7 @@
 		VWM002 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC008 /* HistoryViewModel.swift */; };
 		VWM003 /* ProgressViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC028 /* ProgressViewModel.swift */; };
 		TST001 /* SyncEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSF001 /* SyncEngineTests.swift */; };
+		TST002 /* SwiftDataMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSF002 /* SwiftDataMigrationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,7 +94,10 @@
 		SRC032 /* SyncMetadataMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMetadataMigration.swift; sourceTree = "<group>"; };
 		SRC033 /* SyncStatusIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatusIndicator.swift; sourceTree = "<group>"; };
 		SRC034 /* KeyboardPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardPreloader.swift; sourceTree = "<group>"; };
+		SRC035 /* WorkoutTrackerSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTrackerSchema.swift; sourceTree = "<group>"; };
+		SRC036 /* WorkoutTrackerMigrationPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTrackerMigrationPlan.swift; sourceTree = "<group>"; };
 		TSF001 /* SyncEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngineTests.swift; sourceTree = "<group>"; };
+		TSF002 /* SwiftDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataMigrationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -151,6 +157,8 @@
 			isa = PBXGroup;
 			children = (
 				SRC003 /* WorkoutType.swift */,
+				SRC035 /* WorkoutTrackerSchema.swift */,
+				SRC036 /* WorkoutTrackerMigrationPlan.swift */,
 				SRC004 /* Exercise.swift */,
 				SRC005 /* WorkoutLog.swift */,
 				SRC006 /* ContentNote.swift */,
@@ -239,6 +247,7 @@
 			isa = PBXGroup;
 			children = (
 				TSF001 /* SyncEngineTests.swift */,
+				TSF002 /* SwiftDataMigrationTests.swift */,
 			);
 			path = WorkoutTrackerTests;
 			sourceTree = "<group>";
@@ -343,6 +352,8 @@
 				MDL004 /* ContentNote.swift in Sources */,
 				MDL005 /* BodyWeightEntry.swift in Sources */,
 				MDL006 /* SyncSupport.swift in Sources */,
+				MDL007 /* WorkoutTrackerSchema.swift in Sources */,
+				MDL008 /* WorkoutTrackerMigrationPlan.swift in Sources */,
 				VWM001 /* WorkoutViewModel.swift in Sources */,
 				VWM002 /* HistoryViewModel.swift in Sources */,
 				VWM003 /* ProgressViewModel.swift in Sources */,
@@ -375,6 +386,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				TST001 /* SyncEngineTests.swift in Sources */,
+				TST002 /* SwiftDataMigrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

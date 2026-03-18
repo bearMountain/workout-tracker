@@ -95,12 +95,13 @@ class WorkoutViewModel {
 
     // MARK: - Exercise CRUD
 
-    func addExercise(name: String, targetWeight: Double, targetReps: Int, notes: String, workoutType: WorkoutType) {
+    func addExercise(name: String, targetWeight: Double, targetReps: Int, isMachine: Bool, notes: String, workoutType: WorkoutType) {
         let maxIndex = exercises.filter { $0.workoutType == workoutType }.map { $0.orderIndex }.max() ?? -1
         let exercise = Exercise(
             name: name,
             targetWeight: targetWeight,
             targetReps: targetReps,
+            isMachine: isMachine,
             notes: notes,
             workoutType: workoutType,
             orderIndex: maxIndex + 1
@@ -111,10 +112,11 @@ class WorkoutViewModel {
         syncEngine.queueForSync(exercise)
     }
 
-    func updateExercise(_ exercise: Exercise, name: String, targetWeight: Double, targetReps: Int, notes: String) {
+    func updateExercise(_ exercise: Exercise, name: String, targetWeight: Double, targetReps: Int, isMachine: Bool, notes: String) {
         exercise.name = name
         exercise.targetWeight = targetWeight
         exercise.targetReps = targetReps
+        exercise.isMachine = isMachine
         exercise.notes = notes
         exercise.markDirty()
         try? modelContext.save()
@@ -130,5 +132,22 @@ class WorkoutViewModel {
         fetchRecentLogs()
         syncEngine.queueForSync(exercise)
         exercise.logs?.forEach { syncEngine.queueForSync($0) }
+    }
+
+    func moveExercises(in workoutType: WorkoutType, fromOffsets source: IndexSet, toOffset destination: Int) {
+        var workoutExercises = exercises(for: workoutType)
+        workoutExercises.move(fromOffsets: source, toOffset: destination)
+
+        for (index, exercise) in workoutExercises.enumerated() where exercise.orderIndex != index {
+            exercise.orderIndex = index
+            exercise.markDirty()
+        }
+
+        try? modelContext.save()
+        fetchExercises()
+
+        for exercise in workoutExercises {
+            syncEngine.queueForSync(exercise)
+        }
     }
 }

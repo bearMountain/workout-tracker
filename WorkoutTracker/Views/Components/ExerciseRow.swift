@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ExerciseRow: View {
     let exercise: Exercise
+    let isReordering: Bool
     let onLog: () -> Void
     
     private var todaysLogs: [WorkoutLog] {
@@ -34,6 +35,8 @@ struct ExerciseRow: View {
                 .fontWeight(.medium)
             }
             .buttonStyle(SecondaryButtonStyle())
+            .disabled(isReordering)
+            .opacity(isReordering ? 0.5 : 1)
         }
         .cardStyle()
     }
@@ -46,7 +49,7 @@ struct ExerciseRow: View {
                     .foregroundStyle(AppTheme.textPrimary)
                 
                 HStack(spacing: 12) {
-                    Label("\(Int(exercise.targetWeight)) lbs", systemImage: "scalemass")
+                    Label(targetWeightLabel, systemImage: "scalemass")
                     Label("\(exercise.targetReps) reps", systemImage: "repeat")
                 }
                 .font(.subheadline)
@@ -54,7 +57,7 @@ struct ExerciseRow: View {
             }
             
             Spacer()
-            
+
             if todaysLogs.isEmpty, let latestLog = exercise.latestLog {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Last:")
@@ -103,6 +106,13 @@ struct ExerciseRow: View {
         .background(AppTheme.cardBorder.opacity(0.3))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
+
+    private var targetWeightLabel: String {
+        let baseLabel = exercise.targetWeight.rounded(.towardZero) == exercise.targetWeight
+            ? "\(Int(exercise.targetWeight)) lbs"
+            : String(format: "%.1f lbs", exercise.targetWeight)
+        return exercise.isMachine ? "\(baseLabel) (M)" : baseLabel
+    }
 }
 
 #Preview {
@@ -113,7 +123,10 @@ struct ExerciseRow: View {
         workoutType: .a
     )
     
-    return ExerciseRow(exercise: exercise) {}
+    return ExerciseRow(
+        exercise: exercise,
+        isReordering: false
+    ) {}
         .padding()
         .background(AppTheme.background)
 }

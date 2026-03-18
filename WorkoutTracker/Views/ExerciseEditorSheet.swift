@@ -10,6 +10,7 @@ struct ExerciseEditorSheet: View {
     @State private var name: String
     @State private var targetWeight: Double
     @State private var targetReps: Int
+    @State private var isMachine: Bool
     @State private var notes: String
     
     var isEditing: Bool { exercise != nil }
@@ -23,6 +24,7 @@ struct ExerciseEditorSheet: View {
         _name = State(initialValue: exercise?.name ?? "")
         _targetWeight = State(initialValue: exercise?.targetWeight ?? 0)
         _targetReps = State(initialValue: exercise?.targetReps ?? 8)
+        _isMachine = State(initialValue: exercise?.isMachine ?? false)
         _notes = State(initialValue: exercise?.notes ?? "")
     }
     
@@ -36,6 +38,7 @@ struct ExerciseEditorSheet: View {
                 VStack(spacing: AppTheme.spacingLarge) {
                     nameSection
                     targetSection
+                    equipmentSection
                     notesSection
                 }
                 .padding()
@@ -63,6 +66,29 @@ struct ExerciseEditorSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+    }
+
+    private var equipmentSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Equipment")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.textSecondary)
+
+            Button {
+                isMachine.toggle()
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: isMachine ? "checkmark.square.fill" : "square")
+                        .foregroundStyle(isMachine ? AppTheme.accent : AppTheme.textMuted)
+                    Text("Machine")
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Spacer()
+                }
+                .font(.body)
+            }
+            .buttonStyle(.plain)
+        }
+        .cardStyle()
     }
     
     private var nameSection: some View {
@@ -167,9 +193,9 @@ struct ExerciseEditorSheet: View {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         
         if let exercise = exercise {
-            viewModel.updateExercise(exercise, name: trimmedName, targetWeight: targetWeight, targetReps: targetReps, notes: notes)
+            viewModel.updateExercise(exercise, name: trimmedName, targetWeight: targetWeight, targetReps: targetReps, isMachine: isMachine, notes: notes)
         } else {
-            viewModel.addExercise(name: trimmedName, targetWeight: targetWeight, targetReps: targetReps, notes: notes, workoutType: workoutType)
+            viewModel.addExercise(name: trimmedName, targetWeight: targetWeight, targetReps: targetReps, isMachine: isMachine, notes: notes, workoutType: workoutType)
         }
         
         onDismiss()
@@ -177,7 +203,7 @@ struct ExerciseEditorSheet: View {
 }
 
 #Preview {
-    let container = try! ModelContainer(for: Exercise.self, WorkoutLog.self)
+    let container = try! WorkoutTrackerModelContainerFactory.makeInMemoryContainer()
     let context = container.mainContext
     let syncEngine = SyncEngine(modelContext: context)
     return ExerciseEditorSheet(

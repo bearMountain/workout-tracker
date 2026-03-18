@@ -8,17 +8,8 @@ struct WorkoutTrackerApp: App {
     let syncEngine: SyncEngine
 
     init() {
-        let schema = Schema([
-            Exercise.self,
-            WorkoutLog.self,
-            ContentNote.self,
-            BodyWeightEntry.self
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
         do {
-            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            SyncMetadataMigration.backfill(context: container.mainContext)
+            let container = try WorkoutTrackerModelContainerFactory.makeSharedContainer()
             self.sharedModelContainer = container
             self.syncEngine = SyncEngine(modelContext: container.mainContext)
         } catch {

@@ -50,6 +50,7 @@ actor MockAPIClient: APIClientProtocol {
             name: input.name,
             targetWeight: input.targetWeight,
             targetReps: input.targetReps,
+            isMachine: input.isMachine,
             notes: input.notes,
             workoutType: input.workoutType,
             orderIndex: input.orderIndex,
@@ -144,11 +145,9 @@ final class SyncEngineTests: XCTestCase {
     private var testContainer: ModelContainer?
     
     private func makeTestContext() throws -> ModelContext {
-        let schema = Schema([Exercise.self, WorkoutLog.self, ContentNote.self, BodyWeightEntry.self])
         let tempDir = FileManager.default.temporaryDirectory
         let storeURL = tempDir.appendingPathComponent("test_\(UUID().uuidString).store")
-        let config = ModelConfiguration(schema: schema, url: storeURL)
-        let container = try ModelContainer(for: schema, configurations: [config])
+        let container = try WorkoutTrackerModelContainerFactory.makeContainer(url: storeURL)
         testContainer = container
         return container.mainContext
     }
@@ -178,6 +177,7 @@ final class SyncEngineTests: XCTestCase {
         await mock.setExercises([
             APIExercise(
                 id: id.uuidString, name: "Squat", targetWeight: 200, targetReps: 5,
+                isMachine: false,
                 notes: "", workoutType: "A", orderIndex: 0,
                 clientUpdatedAt: "2026-01-01T00:00:00.000Z",
                 createdAt: "2026-01-01T00:00:00.000Z",
@@ -326,6 +326,7 @@ final class SyncEngineTests: XCTestCase {
                 name: "Remote Squat",
                 targetWeight: 225,
                 targetReps: 5,
+                isMachine: nil,
                 notes: "",
                 workoutType: "A",
                 orderIndex: 0,
@@ -343,5 +344,46 @@ final class SyncEngineTests: XCTestCase {
         
         XCTAssertEqual(exercise.name, "Local Squat")
         XCTAssertTrue(exercise.isDirty)
+    }
+
+    func testPullPreservesLocalMachineFlagWhenRemotePayloadOmitsIt() async throws {
+        let context = try makeTestContext()
+        let mock = MockAPIClient()
+        let exercise = Exercise(
+            name: "Leg Extensions",
+            targetWeight: 60,
+            targetReps: 8,
+            isMachine: true,
+            workoutType: .a,
+            orderIndex: 0
+        )
+        exercise.remoteID = exercise.localID.uuidString
+        exercise.markSynced(remoteID: exercise.localID.uuidString, serverVersion: 1)
+        context.insert(exercise)
+        try context.save()
+
+        await mock.setExercises([
+            APIExercise(
+                id: exercise.remoteID ?? "",
+                name: "Leg Extensions",
+                targetWeight: 60,
+                targetReps: 8,
+                isMachine: nil,
+                notes: "",
+                workoutType: "A",
+                orderIndex: 0,
+                clientUpdatedAt: isoString(Date()),
+                createdAt: isoString(Date().addingTimeInterval(-3600)),
+                updatedAt: isoString(Date()),
+                deletedAt: nil,
+                serverVersion: 2,
+                lastIdempotencyKey: nil
+            )
+        ])
+
+        let engine = makeEngine(context: context, mock: mock)
+        try await engine.pullLatestFromServer()
+
+        XCTAssertTrue(exercise.isMachine)
     }
 }
