@@ -194,6 +194,23 @@ To make this plan real, we should implement these next:
 - Add migration fixtures/tests for at least one older app store and one older database state
 - Document each future migration in this file or a linked migration log
 
+## Current Status
+
+The project now has an initial migration workflow in place:
+
+- Native uses explicit SwiftData `VersionedSchema` and `SchemaMigrationPlan`
+- Server uses ordered SQL migration files under `migrations/`
+- Deploys run `npm run db:migrate` before backend build
+- The repo includes `npm run db:migrate:verify`
+- The repo includes `npm run db:check-export` as a DB contract sanity check
+- There is an implementation checklist in `docs/instructions/migration-checklist.md`
+
+This is an improvement, but not the end state:
+
+- We still need to keep documenting each persistent change explicitly
+- We should keep adding migration verification coverage as schema complexity grows
+- Any new persistent field must follow the checklist, not just the code path
+
 ## Decision Rule
 
 If a change touches persisted data and we have to ask "will existing users survive this?", it is a migration and must follow this document.

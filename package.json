@@ -7,7 +7,11 @@
     "dev": "vercel dev",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "db:migrate": "npx tsx scripts/migrate-db.ts",
+    "db:migrate": "node scripts/migrate.js",
+    "db:migrate:verify": "node scripts/migrate.js verify",
+    "db:check-export": "node scripts/check-export-fields.js",
+    "db:migrate:prod": "npx vercel env pull .env.production && DOTENV_CONFIG_PATH=.env.production node scripts/migrate.js && rm -f .env.production",
+    "db:migrate:prod:verify": "npx vercel env pull .env.production && DOTENV_CONFIG_PATH=.env.production node scripts/migrate.js verify && rm -f .env.production",
     "db:setup": "npx tsx scripts/setup-db.ts",
     "test:server": "node --test --import tsx tests/server/**/*.test.ts",
     "generate:swift": "quicktype lib/types.ts -o WorkoutTracker/Services/APIModels.swift --lang swift --just-types"

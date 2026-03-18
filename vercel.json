@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "npm run db:migrate && npm run build",
+  "buildCommand": "npm run db:migrate && npm run db:migrate:verify && npm run build",
   "outputDirectory": "",
   "headers": [
     {
