@@ -30,6 +30,7 @@
 		SVC002 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC019 /* APIModels.swift */; };
 		SVC003 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC029 /* SyncEngine.swift */; };
 		SVC004 /* SyncMetadataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC032 /* SyncMetadataMigration.swift */; };
+		SVC005 /* KeyboardPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC034 /* KeyboardPreloader.swift */; };
 		THM001 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC016 /* AppTheme.swift */; };
 		VIW001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC009 /* HomeView.swift */; };
 		VIW002 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC010 /* WorkoutDetailView.swift */; };
@@ -89,6 +90,7 @@
 		SRC031 /* SyncSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSupport.swift; sourceTree = "<group>"; };
 		SRC032 /* SyncMetadataMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMetadataMigration.swift; sourceTree = "<group>"; };
 		SRC033 /* SyncStatusIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatusIndicator.swift; sourceTree = "<group>"; };
+		SRC034 /* KeyboardPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardPreloader.swift; sourceTree = "<group>"; };
 		TSF001 /* SyncEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngineTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -216,6 +218,7 @@
 			children = (
 				SRC018 /* APIClient.swift */,
 				SRC019 /* APIModels.swift */,
+				SRC034 /* KeyboardPreloader.swift */,
 				SRC029 /* SyncEngine.swift */,
 				SRC032 /* SyncMetadataMigration.swift */,
 			);
@@ -361,6 +364,7 @@
 				PRV001 /* SampleData.swift in Sources */,
 				SVC001 /* APIClient.swift in Sources */,
 				SVC002 /* APIModels.swift in Sources */,
+				SVC005 /* KeyboardPreloader.swift in Sources */,
 				SVC003 /* SyncEngine.swift in Sources */,
 				SVC004 /* SyncMetadataMigration.swift in Sources */,
 			);

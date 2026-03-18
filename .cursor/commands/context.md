@@ -1,2 +1,2 @@
 - read /docs/Genesis.md to understand the backstory of this books' creation
-- read /docs/base_checklist.md for an overview of the system
+- read /docs/data_structure_migration.md to understand about data structure changes

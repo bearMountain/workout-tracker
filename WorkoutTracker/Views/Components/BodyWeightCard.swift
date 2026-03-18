@@ -74,7 +74,10 @@ struct BodyWeightCard: View {
         }
         .cardStyle()
         .sheet(isPresented: $showAddSheet) {
-            AddBodyWeightSheet(syncEngine: syncEngine)
+            AddBodyWeightSheet(
+                syncEngine: syncEngine,
+                lastWeight: latestEntry?.weight
+            )
         }
     }
     

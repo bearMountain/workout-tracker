@@ -31,6 +31,9 @@ struct WorkoutTrackerApp: App {
             ContentView()
                 .preferredColorScheme(.dark)
                 .environment(syncEngine)
+                .task {
+                    KeyboardPreloader.preload()
+                }
         }
         .modelContainer(sharedModelContainer)
     }

@@ -5,22 +5,14 @@ struct AddBodyWeightSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     var syncEngine: SyncEngine?
+    let lastWeight: Double?
     
     @State private var weight: String = ""
     @State private var date: Date = Date()
     @State private var notes: String = ""
     @State private var isSaving = false
+    @State private var focusTask: Task<Void, Never>?
     @FocusState private var isWeightFieldFocused: Bool
-    
-    @Query(sort: \BodyWeightEntry.date, order: .reverse) private var recentEntries: [BodyWeightEntry]
-    
-    private var visibleRecentEntries: [BodyWeightEntry] {
-        recentEntries.filter { !$0.isDeleted }
-    }
-    
-    private var lastWeight: Double? {
-        visibleRecentEntries.first?.weight
-    }
     
     private var isValid: Bool {
         guard let weightValue = Double(weight) else { return false }
@@ -67,9 +59,21 @@ struct AddBodyWeightSheet: View {
         }
         .onAppear {
             weight = ""
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            notes = ""
+            date = Date()
+            focusTask?.cancel()
+            focusTask = Task { @MainActor in
+                // Let the sheet finish presenting before asking iOS to
+                // build and show the keyboard for the first time.
+                try? await Task.sleep(for: .milliseconds(150))
+                guard !Task.isCancelled else { return }
                 isWeightFieldFocused = true
             }
+        }
+        .onDisappear {
+            focusTask?.cancel()
+            focusTask = nil
+            isWeightFieldFocused = false
         }
     }
     
@@ -189,6 +193,6 @@ struct AddBodyWeightSheet: View {
 }
 
 #Preview {
-    AddBodyWeightSheet()
+    AddBodyWeightSheet(lastWeight: nil)
         .modelContainer(for: [BodyWeightEntry.self], inMemory: true)
 }

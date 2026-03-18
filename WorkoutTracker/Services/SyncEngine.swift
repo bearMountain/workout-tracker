@@ -345,7 +345,7 @@ final class SyncEngine {
                 existing.remoteID = remote.id
                 existing.isDeleted = remote.deletedAt != nil
                 existing.deletedAt = parsedOptionalDate(remote.deletedAt)
-                existing.lastModifiedAt = parsedDate(remote.clientUpdatedAt, fallback: remote.updatedAt ?? remote.createdAt)
+                existing.lastModifiedAt = parsedDate(remote.clientUpdatedAt, fallback: remote.updatedAt)
                 existing.markSynced(remoteID: remote.id, serverVersion: remote.serverVersion ?? max(existing.serverVersion, 1), at: Date())
             } else {
                 let exercise = Exercise(

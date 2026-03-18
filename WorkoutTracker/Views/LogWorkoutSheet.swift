@@ -44,7 +44,7 @@ struct LogWorkoutSheet: View {
 
                 floatingSaveButton
                     .padding(.trailing, 24)
-                    .padding(.bottom, 100)
+                    .padding(.bottom, 50)
             }
             .background(AppTheme.background)
             .navigationTitle("Log Set")
