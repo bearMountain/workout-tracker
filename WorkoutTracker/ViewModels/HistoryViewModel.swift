@@ -8,6 +8,7 @@ struct ExerciseSets: Identifiable {
     let id = UUID()
     let exerciseName: String
     let workoutType: WorkoutType
+    let orderIndex: Int
     let targetWeight: Double
     let targetReps: Int
     let sets: [WorkoutLog]
@@ -79,11 +80,18 @@ class HistoryViewModel {
                 return ExerciseSets(
                     exerciseName: exercise.name,
                     workoutType: exercise.workoutType,
+                    orderIndex: exercise.orderIndex,
                     targetWeight: exercise.targetWeight,
                     targetReps: exercise.targetReps,
                     sets: sortedSets
                 )
-            }.sorted { $0.exerciseName < $1.exerciseName }
+            }.sorted {
+                if $0.orderIndex == $1.orderIndex {
+                    return $0.exerciseName < $1.exerciseName
+                }
+
+                return $0.orderIndex < $1.orderIndex
+            }
 
             let workoutType = exerciseSets.first?.workoutType
 
