@@ -5,7 +5,6 @@ struct ProgressTabView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(SyncEngine.self) private var syncEngine: SyncEngine?
     @State private var viewModel: ProgressViewModel?
-    @State private var selectedExerciseIndex = 0
 
     var body: some View {
         NavigationStack {
@@ -17,9 +16,9 @@ struct ProgressTabView: View {
                         VStack(spacing: AppTheme.spacingLarge) {
                             dateRangePicker(viewModel: viewModel)
 
-                            exerciseProgressSection(viewModel: viewModel)
-
                             bodyWeightSection(viewModel: viewModel)
+
+                            weightliftingSection(viewModel: viewModel)
                         }
                         .padding()
                     }
@@ -79,58 +78,22 @@ struct ProgressTabView: View {
         .padding(.vertical, 8)
     }
 
-    private func exerciseProgressSection(viewModel: ProgressViewModel) -> some View {
+    private func weightliftingSection(viewModel: ProgressViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
-            HStack {
-                Text("Exercise Progress")
-                    .font(.title2.bold())
-                    .foregroundStyle(AppTheme.textPrimary)
+            Text("Weightlifting")
+                .font(.title2.bold())
+                .foregroundStyle(AppTheme.textPrimary)
 
-                Spacer()
-
-                if !viewModel.exercises.isEmpty {
-                    Menu {
-                        ForEach(Array(viewModel.exercises.enumerated()), id: \.element.id) { index, exercise in
-                            Button {
-                                selectedExerciseIndex = index
-                                viewModel.selectedExercise = exercise
-                            } label: {
-                                HStack {
-                                    Text(exercise.name)
-                                    if viewModel.selectedExercise?.id == exercise.id {
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(viewModel.selectedExercise?.name ?? "Select")
-                                .font(.subheadline)
-                            Image(systemName: "chevron.down")
-                                .font(.caption)
-                        }
-                        .foregroundStyle(AppTheme.accent)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(AppTheme.accent.opacity(0.15))
-                        .clipShape(Capsule())
-                    }
-                }
-            }
-
-            if let exercise = viewModel.selectedExercise {
-                ExerciseChartView(
-                    exercise: exercise,
-                    data: viewModel.chartData(for: exercise),
-                    personalBest: viewModel.personalBest(for: exercise),
-                    isNewPR: viewModel.isNewPersonalBest(for: exercise),
-                    weightTrend: viewModel.weightTrend(for: exercise),
-                    repsTrend: viewModel.repsTrend(for: exercise),
-                    motivationalMessage: viewModel.motivationalMessage(for: exercise)
-                )
-            } else if viewModel.exercises.isEmpty {
+            if viewModel.exercises.isEmpty {
                 emptyExercisesView
+            } else {
+                ForEach(WorkoutType.allCases, id: \.self) { workoutType in
+                    WorkoutDayProgressChart(
+                        workoutType: workoutType,
+                        exercises: viewModel.exercises(for: workoutType),
+                        viewModel: viewModel
+                    )
+                }
             }
         }
     }

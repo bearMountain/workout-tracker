@@ -84,6 +84,12 @@ class WorkoutViewModel {
         syncEngine.queueForSync(log)
     }
 
+    func deleteWorkoutLog(_ log: WorkoutLog) {
+        syncEngine.queueForDeletion(log)
+        fetchRecentLogs()
+        fetchExercises()
+    }
+
     func updateExerciseTarget(exercise: Exercise, weight: Double, reps: Int) {
         exercise.targetWeight = weight
         exercise.targetReps = reps

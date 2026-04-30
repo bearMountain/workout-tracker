@@ -3,7 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct ExerciseDataPoint: Identifiable {
-    let id = UUID()
+    var id: Date { date }
     let date: Date
     let weight: Double
     let reps: Int
@@ -37,8 +37,21 @@ class ProgressViewModel {
 
     var exercises: [Exercise] = []
     var bodyWeightEntries: [BodyWeightEntry] = []
-    var selectedExercise: Exercise?
     var selectedDateRange: DateRange = .thirtyDays
+
+    func exercises(for workoutType: WorkoutType) -> [Exercise] {
+        exercises.filter { $0.workoutType == workoutType }
+    }
+
+    func yAxisDomain(for workoutExercises: [Exercise]) -> ClosedRange<Double> {
+        let weights = workoutExercises.flatMap { chartData(for: $0).map(\.weight) }
+        guard !weights.isEmpty else { return 0...100 }
+        let minWeight = weights.min() ?? 0
+        let maxWeight = weights.max() ?? 100
+        let range = maxWeight - minWeight
+        let padding = max(range * 0.2, 5)
+        return max(0, minWeight - padding)...(maxWeight + padding)
+    }
 
     var isSyncing: Bool { syncEngine.isSyncing }
     var syncError: String? { syncEngine.syncError }
@@ -61,9 +74,6 @@ class ProgressViewModel {
             sortBy: [SortDescriptor(\.orderIndex)]
         )
         exercises = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
-        if selectedExercise == nil {
-            selectedExercise = exercises.first
-        }
     }
 
     private func fetchBodyWeightEntries() {

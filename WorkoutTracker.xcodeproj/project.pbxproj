@@ -16,6 +16,7 @@
 		CMP003 /* BodyWeightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC022 /* BodyWeightCard.swift */; };
 		CMP004 /* AddBodyWeightSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC023 /* AddBodyWeightSheet.swift */; };
 		CMP005 /* SyncStatusIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC033 /* SyncStatusIndicator.swift */; };
+		CMP006 /* NoteLinkThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC037 /* NoteLinkThumbnail.swift */; };
 		MDL001 /* WorkoutType.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC003 /* WorkoutType.swift */; };
 		MDL002 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC004 /* Exercise.swift */; };
 		MDL003 /* WorkoutLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC005 /* WorkoutLog.swift */; };
@@ -25,7 +26,7 @@
 		MDL007 /* WorkoutTrackerSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC035 /* WorkoutTrackerSchema.swift */; };
 		MDL008 /* WorkoutTrackerMigrationPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC036 /* WorkoutTrackerMigrationPlan.swift */; };
 		PRG001 /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC025 /* ProgressView.swift */; };
-		PRG002 /* ExerciseChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC026 /* ExerciseChartView.swift */; };
+		PRG002 /* WorkoutDayProgressChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC026 /* WorkoutDayProgressChart.swift */; };
 		PRG003 /* BodyWeightChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC027 /* BodyWeightChartView.swift */; };
 		PRV001 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC017 /* SampleData.swift */; };
 		SVC001 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC018 /* APIClient.swift */; };
@@ -85,7 +86,7 @@
 		SRC023 /* AddBodyWeightSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBodyWeightSheet.swift; sourceTree = "<group>"; };
 		SRC024 /* BodyWeightEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightEntry.swift; sourceTree = "<group>"; };
 		SRC025 /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
-		SRC026 /* ExerciseChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseChartView.swift; sourceTree = "<group>"; };
+		SRC026 /* WorkoutDayProgressChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDayProgressChart.swift; sourceTree = "<group>"; };
 		SRC027 /* BodyWeightChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightChartView.swift; sourceTree = "<group>"; };
 		SRC028 /* ProgressViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewModel.swift; sourceTree = "<group>"; };
 		SRC029 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
@@ -96,6 +97,7 @@
 		SRC034 /* KeyboardPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardPreloader.swift; sourceTree = "<group>"; };
 		SRC035 /* WorkoutTrackerSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTrackerSchema.swift; sourceTree = "<group>"; };
 		SRC036 /* WorkoutTrackerMigrationPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTrackerMigrationPlan.swift; sourceTree = "<group>"; };
+		SRC037 /* NoteLinkThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteLinkThumbnail.swift; sourceTree = "<group>"; };
 		TSF001 /* SyncEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngineTests.swift; sourceTree = "<group>"; };
 		TSF002 /* SwiftDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataMigrationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -201,6 +203,7 @@
 				SRC022 /* BodyWeightCard.swift */,
 				SRC023 /* AddBodyWeightSheet.swift */,
 				SRC033 /* SyncStatusIndicator.swift */,
+				SRC037 /* NoteLinkThumbnail.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -237,7 +240,7 @@
 			isa = PBXGroup;
 			children = (
 				SRC025 /* ProgressView.swift */,
-				SRC026 /* ExerciseChartView.swift */,
+				SRC026 /* WorkoutDayProgressChart.swift */,
 				SRC027 /* BodyWeightChartView.swift */,
 			);
 			path = Progress;
@@ -368,8 +371,9 @@
 				CMP003 /* BodyWeightCard.swift in Sources */,
 				CMP004 /* AddBodyWeightSheet.swift in Sources */,
 				CMP005 /* SyncStatusIndicator.swift in Sources */,
+				CMP006 /* NoteLinkThumbnail.swift in Sources */,
 				PRG001 /* ProgressView.swift in Sources */,
-				PRG002 /* ExerciseChartView.swift in Sources */,
+				PRG002 /* WorkoutDayProgressChart.swift in Sources */,
 				PRG003 /* BodyWeightChartView.swift in Sources */,
 				THM001 /* AppTheme.swift in Sources */,
 				PRV001 /* SampleData.swift in Sources */,

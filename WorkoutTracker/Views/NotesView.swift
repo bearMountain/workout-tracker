@@ -83,16 +83,19 @@ struct NotesView: View {
         ScrollView {
             LazyVStack(spacing: AppTheme.spacing) {
                 ForEach(visibleNotes) { note in
-                    NoteRow(note: note) {
-                        selectedNote = note
-                    }
-                    .contextMenu {
-                        Button(role: .destructive) {
-                            deleteNote(note)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+                    NoteRow(note: note, onEdit: { selectedNote = note })
+                        .contextMenu {
+                            Button {
+                                selectedNote = note
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            Button(role: .destructive) {
+                                deleteNote(note)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
-                    }
                 }
             }
             .padding()
@@ -125,35 +128,49 @@ struct NotesView: View {
 
 struct NoteRow: View {
     let note: ContentNote
-    let onTap: () -> Void
-    
+    let onEdit: () -> Void
+
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(note.title)
-                        .font(.headline)
-                        .foregroundStyle(AppTheme.textPrimary)
-                    
-                    Spacer()
-                    
-                    if note.hasLink {
-                        Image(systemName: "link")
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.accentSecondary)
+        Button {
+            if let url = note.url {
+                openURL(url)
+            } else {
+                onEdit()
+            }
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                if let linkURL = note.url {
+                    NoteLinkThumbnailView(url: linkURL)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(note.title)
+                            .font(.headline)
+                            .foregroundStyle(AppTheme.textPrimary)
+
+                        Spacer()
+
+                        if note.hasLink {
+                            Image(systemName: "link")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.accentSecondary)
+                        }
                     }
+
+                    if !note.body.isEmpty {
+                        Text(note.body)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .lineLimit(3)
+                    }
+
+                    Text(note.formattedDate)
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.textMuted)
                 }
-                
-                if !note.body.isEmpty {
-                    Text(note.body)
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .lineLimit(3)
-                }
-                
-                Text(note.formattedDate)
-                    .font(.caption)
-                    .foregroundStyle(AppTheme.textMuted)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .cardStyle()

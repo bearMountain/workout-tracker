@@ -111,12 +111,16 @@ struct WorkoutDetailView: View {
             ForEach(exercises) { exercise in
                 ExerciseRow(
                     exercise: exercise,
-                    isReordering: isReordering
-                ) {
-                    if !isReordering {
-                        exerciseToLog = exercise
+                    isReordering: isReordering,
+                    onLog: {
+                        if !isReordering {
+                            exerciseToLog = exercise
+                        }
+                    },
+                    onDeleteLog: { log in
+                        viewModel.deleteWorkoutLog(log)
                     }
-                }
+                )
                 .contextMenu {
                     if !isReordering {
                         Button {
