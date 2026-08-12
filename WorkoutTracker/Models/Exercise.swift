@@ -12,7 +12,7 @@ extension Exercise {
     }
 
     var activeLogs: [WorkoutLog] {
-        (logs ?? []).filter { !$0.isDeleted }
+        (logs ?? []).filter { !$0.isSoftDeleted }
     }
 
     var latestLog: WorkoutLog? {
@@ -24,7 +24,7 @@ extension Exercise {
     }
 
     static func bestLog(in logs: [WorkoutLog]) -> WorkoutLog? {
-        logs.filter { !$0.isDeleted }.max { lhs, rhs in
+        logs.filter { !$0.isSoftDeleted }.max { lhs, rhs in
             if lhs.actualWeight == rhs.actualWeight {
                 if lhs.actualReps == rhs.actualReps {
                     return lhs.date < rhs.date
@@ -44,7 +44,7 @@ extension Exercise {
     ) -> WorkoutLog? {
         let currentDay = calendar.startOfDay(for: date)
         let previousLogs = logs.filter {
-            !$0.isDeleted && calendar.startOfDay(for: $0.date) < currentDay
+            !$0.isSoftDeleted && calendar.startOfDay(for: $0.date) < currentDay
         }
 
         guard let lastWorkoutDay = previousLogs

@@ -55,7 +55,7 @@ class HistoryViewModel {
         let descriptor = FetchDescriptor<WorkoutLog>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        logs = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
+        logs = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isSoftDeleted }
         buildSessions()
     }
 

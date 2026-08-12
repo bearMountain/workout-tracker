@@ -10,7 +10,7 @@ struct NotesView: View {
     @State private var selectedNote: ContentNote?
     
     private var visibleNotes: [ContentNote] {
-        notes.filter { !$0.isDeleted }
+        notes.filter { !$0.isSoftDeleted }
     }
     
     var body: some View {

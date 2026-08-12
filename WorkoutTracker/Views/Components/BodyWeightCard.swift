@@ -8,7 +8,7 @@ struct BodyWeightCard: View {
     var syncEngine: SyncEngine?
     
     private var visibleEntries: [BodyWeightEntry] {
-        bodyWeightEntries.filter { !$0.isDeleted }
+        bodyWeightEntries.filter { !$0.isSoftDeleted }
     }
     
     private var latestEntry: BodyWeightEntry? {

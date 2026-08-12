@@ -25,14 +25,14 @@ class WorkoutViewModel {
         let descriptor = FetchDescriptor<Exercise>(
             sortBy: [SortDescriptor(\.orderIndex)]
         )
-        exercises = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
+        exercises = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isSoftDeleted }
     }
 
     func fetchRecentLogs() {
         let descriptor = FetchDescriptor<WorkoutLog>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        recentLogs = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
+        recentLogs = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isSoftDeleted }
     }
 
     func exercises(for workoutType: WorkoutType) -> [Exercise] {
@@ -132,12 +132,9 @@ class WorkoutViewModel {
 
     func deleteExercise(_ exercise: Exercise) {
         exercise.markDeleted()
-        exercise.logs?.forEach { $0.markDeleted() }
         try? modelContext.save()
         fetchExercises()
-        fetchRecentLogs()
         syncEngine.queueForSync(exercise)
-        exercise.logs?.forEach { syncEngine.queueForSync($0) }
     }
 
     func moveExercises(in workoutType: WorkoutType, fromOffsets source: IndexSet, toOffset destination: Int) {

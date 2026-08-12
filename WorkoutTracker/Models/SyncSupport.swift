@@ -27,6 +27,11 @@ extension SyncableModel {
     var effectiveRemoteID: String {
         remoteID ?? localID.uuidString
     }
+
+    /// Soft-delete flag that does not collide with SwiftData's `PersistentModel.isDeleted`.
+    var isSoftDeleted: Bool {
+        deletedAt != nil
+    }
     
     var shouldSync: Bool {
         isDirty
@@ -57,9 +62,6 @@ extension SyncableModel {
         lastSyncAttempt = date
         syncError = nil
         retryCount = 0
-        if !isDeleted {
-            deletedAt = nil
-        }
         idempotencyKey = UUID()
     }
     

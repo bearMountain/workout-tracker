@@ -20,7 +20,7 @@ struct ExerciseRow: View {
         let exerciseId = exercise.id
         _logsForExercise = Query(
             filter: #Predicate<WorkoutLog> { log in
-                log.exercise?.id == exerciseId && !log.isDeleted
+                log.exercise?.id == exerciseId && log.deletedAt == nil
             },
             sort: [SortDescriptor(\.date, order: .forward)]
         )

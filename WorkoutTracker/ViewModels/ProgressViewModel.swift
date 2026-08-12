@@ -73,14 +73,16 @@ class ProgressViewModel {
         let descriptor = FetchDescriptor<Exercise>(
             sortBy: [SortDescriptor(\.orderIndex)]
         )
-        exercises = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
+        exercises = ((try? modelContext.fetch(descriptor)) ?? []).filter { exercise in
+            !exercise.isSoftDeleted || !exercise.activeLogs.isEmpty
+        }
     }
 
     private func fetchBodyWeightEntries() {
         let descriptor = FetchDescriptor<BodyWeightEntry>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        bodyWeightEntries = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isDeleted }
+        bodyWeightEntries = ((try? modelContext.fetch(descriptor)) ?? []).filter { !$0.isSoftDeleted }
     }
 
     // MARK: - Exercise Progress Data

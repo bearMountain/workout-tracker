@@ -467,4 +467,64 @@ final class SyncEngineTests: XCTestCase {
 
         XCTAssertEqual(selectedLog?.id, lastDayBest.id)
     }
+
+    func testMarkSyncedDoesNotClearDeletedAt() throws {
+        let context = try makeTestContext()
+        let exercise = Exercise(name: "Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)
+        context.insert(exercise)
+        exercise.markDeleted()
+
+        XCTAssertTrue(exercise.isSoftDeleted)
+        XCTAssertNotNil(exercise.deletedAt)
+
+        exercise.markSynced(remoteID: exercise.localID.uuidString, serverVersion: 1)
+
+        XCTAssertTrue(exercise.isSoftDeleted)
+        XCTAssertNotNil(exercise.deletedAt)
+    }
+
+    func testDeleteExerciseRemovesFromWorkoutButKeepsLogs() throws {
+        let context = try makeTestContext()
+        let mock = MockAPIClient()
+        let engine = makeEngine(context: context, mock: mock, online: false)
+        let viewModel = WorkoutViewModel(modelContext: context, syncEngine: engine)
+
+        let exercise = Exercise(name: "Glute Box Step-down", targetWeight: 0, targetReps: 6, workoutType: .a, orderIndex: 0)
+        context.insert(exercise)
+        let log = WorkoutLog(actualWeight: 0, actualReps: 6, exercise: exercise)
+        context.insert(log)
+        try context.save()
+        viewModel.fetchExercises()
+        viewModel.fetchRecentLogs()
+
+        XCTAssertEqual(viewModel.exercises(for: .a).count, 1)
+
+        viewModel.deleteExercise(exercise)
+
+        XCTAssertTrue(viewModel.exercises(for: .a).isEmpty)
+        XCTAssertTrue(exercise.isSoftDeleted)
+        XCTAssertFalse(log.isSoftDeleted)
+        XCTAssertEqual(exercise.activeLogs.count, 1)
+    }
+
+    func testProgressKeepsSoftDeletedExerciseWithLogs() throws {
+        let context = try makeTestContext()
+        let mock = MockAPIClient()
+        let engine = makeEngine(context: context, mock: mock, online: false)
+
+        let kept = Exercise(name: "Squat", targetWeight: 225, targetReps: 5, workoutType: .a, orderIndex: 0)
+        let removedWithHistory = Exercise(name: "Glute Box Step-down", targetWeight: 0, targetReps: 6, workoutType: .a, orderIndex: 1)
+        let removedWithoutHistory = Exercise(name: "Unused", targetWeight: 50, targetReps: 8, workoutType: .a, orderIndex: 2)
+        [kept, removedWithHistory, removedWithoutHistory].forEach(context.insert)
+
+        context.insert(WorkoutLog(actualWeight: 0, actualReps: 6, exercise: removedWithHistory))
+        removedWithHistory.markDeleted()
+        removedWithoutHistory.markDeleted()
+        try context.save()
+
+        let progress = ProgressViewModel(modelContext: context, syncEngine: engine)
+        let names = Set(progress.exercises(for: .a).map(\.name))
+
+        XCTAssertEqual(names, ["Squat", "Glute Box Step-down"])
+    }
 }

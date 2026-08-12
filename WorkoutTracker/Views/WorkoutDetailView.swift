@@ -9,7 +9,6 @@ struct WorkoutDetailView: View {
     @State private var exerciseToLog: Exercise?
     @State private var showingAddSheet = false
     @State private var exerciseToEdit: Exercise?
-    @State private var showingDeleteConfirmation = false
     @State private var exerciseToDelete: Exercise?
     
     var exercises: [Exercise] {
@@ -67,20 +66,23 @@ struct WorkoutDetailView: View {
                 exerciseToEdit = nil
             }
         }
-        .alert("Delete Exercise?", isPresented: $showingDeleteConfirmation) {
+        .alert(
+            "Remove Exercise?",
+            isPresented: Binding(
+                get: { exerciseToDelete != nil },
+                set: { if !$0 { exerciseToDelete = nil } }
+            ),
+            presenting: exerciseToDelete
+        ) { exercise in
             Button("Cancel", role: .cancel) {
                 exerciseToDelete = nil
             }
-            Button("Delete", role: .destructive) {
-                if let exercise = exerciseToDelete {
-                    viewModel.deleteExercise(exercise)
-                }
+            Button("Remove", role: .destructive) {
+                viewModel.deleteExercise(exercise)
                 exerciseToDelete = nil
             }
-        } message: {
-            if let exercise = exerciseToDelete {
-                Text("Are you sure you want to delete \"\(exercise.name)\"? This will also delete all logged workouts for this exercise.")
-            }
+        } message: { exercise in
+            Text("Remove \"\(exercise.name)\" from this workout? Past logged sets will be kept in History and Progress.")
         }
     }
     
@@ -131,9 +133,8 @@ struct WorkoutDetailView: View {
                         
                         Button(role: .destructive) {
                             exerciseToDelete = exercise
-                            showingDeleteConfirmation = true
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label("Remove", systemImage: "trash")
                         }
                     }
                 }
