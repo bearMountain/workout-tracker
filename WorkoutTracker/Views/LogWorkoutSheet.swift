@@ -18,10 +18,10 @@ struct LogWorkoutSheet: View {
         self.viewModel = viewModel
         self.onDismiss = onDismiss
         
-        if let lastLog = exercise.latestLog {
-            _weightText = State(initialValue: Self.weightText(for: lastLog.actualWeight))
-            _reps = State(initialValue: lastLog.actualReps)
-            _isMachine = State(initialValue: exercise.isMachine || lastLog.isMachine)
+        if let bestLog = exercise.bestLog {
+            _weightText = State(initialValue: Self.weightText(for: bestLog.actualWeight))
+            _reps = State(initialValue: bestLog.actualReps)
+            _isMachine = State(initialValue: exercise.isMachine || bestLog.isMachine)
         } else {
             _weightText = State(initialValue: Self.weightText(for: exercise.targetWeight))
             _reps = State(initialValue: exercise.targetReps)

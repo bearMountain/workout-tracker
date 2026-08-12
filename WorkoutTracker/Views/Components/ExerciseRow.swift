@@ -32,6 +32,10 @@ struct ExerciseRow: View {
         return logsForExercise.filter { cal.isDate($0.date, inSameDayAs: today) }
     }
 
+    private var bestLogFromLastWorkoutDay: WorkoutLog? {
+        Exercise.bestLogFromLastWorkoutDay(in: logsForExercise)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             headerSection
@@ -81,18 +85,18 @@ struct ExerciseRow: View {
 
             Spacer()
 
-            if todaysLogs.isEmpty, let latestLog = exercise.latestLog {
+            if todaysLogs.isEmpty, let lastWorkoutBestLog = bestLogFromLastWorkoutDay {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Last:")
                         .font(.caption)
                         .foregroundStyle(AppTheme.textMuted)
 
-                    Text(latestLog.formattedSetLabel)
+                    Text(lastWorkoutBestLog.formattedSetLabel)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundStyle(latestLog.metTarget ? AppTheme.success : AppTheme.textSecondary)
+                        .foregroundStyle(lastWorkoutBestLog.metTarget ? AppTheme.success : AppTheme.textSecondary)
 
-                    Text(latestLog.feelingLabel)
+                    Text(lastWorkoutBestLog.feelingLabel)
                         .font(.caption)
                 }
             }

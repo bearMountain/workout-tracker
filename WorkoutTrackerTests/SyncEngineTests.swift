@@ -386,4 +386,85 @@ final class SyncEngineTests: XCTestCase {
 
         XCTAssertTrue(exercise.isMachine)
     }
+
+    func testBestLogUsesHighestWeightThenRepsInsteadOfLatest() throws {
+        let context = try makeTestContext()
+        let exercise = Exercise(name: "Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)
+        context.insert(exercise)
+
+        let calendar = Calendar(identifier: .gregorian)
+        let lowerLatest = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 3))!,
+            actualWeight: 185,
+            actualReps: 12,
+            exercise: exercise
+        )
+        let heavierFewerReps = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 1))!,
+            actualWeight: 225,
+            actualReps: 5,
+            exercise: exercise
+        )
+        let bestLog = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 2))!,
+            actualWeight: 225,
+            actualReps: 6,
+            exercise: exercise
+        )
+        let deletedHigherLog = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 4))!,
+            actualWeight: 250,
+            actualReps: 1,
+            exercise: exercise
+        )
+        deletedHigherLog.markDeleted()
+
+        [lowerLatest, heavierFewerReps, bestLog, deletedHigherLog].forEach(context.insert)
+        try context.save()
+
+        XCTAssertEqual(exercise.bestLog?.id, bestLog.id)
+    }
+
+    func testBestLogFromLastWorkoutDayIgnoresLaterLowerSetOnSameDay() throws {
+        let context = try makeTestContext()
+        let exercise = Exercise(name: "Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)
+        context.insert(exercise)
+
+        let calendar = Calendar(identifier: .gregorian)
+        let olderAllTimeBest = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 1, hour: 12))!,
+            actualWeight: 250,
+            actualReps: 3,
+            exercise: exercise
+        )
+        let lastDayBest = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 7, hour: 12))!,
+            actualWeight: 225,
+            actualReps: 6,
+            exercise: exercise
+        )
+        let lastDayLowerLaterSet = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 7, hour: 12, minute: 5))!,
+            actualWeight: 185,
+            actualReps: 10,
+            exercise: exercise
+        )
+        let todayLog = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 14, hour: 12))!,
+            actualWeight: 135,
+            actualReps: 12,
+            exercise: exercise
+        )
+
+        [olderAllTimeBest, lastDayBest, lastDayLowerLaterSet, todayLog].forEach(context.insert)
+        try context.save()
+
+        let selectedLog = Exercise.bestLogFromLastWorkoutDay(
+            in: exercise.activeLogs,
+            before: calendar.date(from: DateComponents(year: 2026, month: 4, day: 14, hour: 12))!,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(selectedLog?.id, lastDayBest.id)
+    }
 }
