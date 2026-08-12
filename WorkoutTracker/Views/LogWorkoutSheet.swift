@@ -18,15 +18,10 @@ struct LogWorkoutSheet: View {
         self.viewModel = viewModel
         self.onDismiss = onDismiss
         
-        if let bestLog = exercise.bestLog {
-            _weightText = State(initialValue: Self.weightText(for: bestLog.actualWeight))
-            _reps = State(initialValue: bestLog.actualReps)
-            _isMachine = State(initialValue: exercise.isMachine || bestLog.isMachine)
-        } else {
-            _weightText = State(initialValue: Self.weightText(for: exercise.targetWeight))
-            _reps = State(initialValue: exercise.targetReps)
-            _isMachine = State(initialValue: exercise.isMachine)
-        }
+        let plan = exercise.plannedSet
+        _weightText = State(initialValue: Self.weightText(for: plan.weight))
+        _reps = State(initialValue: plan.reps)
+        _isMachine = State(initialValue: exercise.isMachine || plan.isMachine)
     }
     
     var body: some View {
@@ -79,7 +74,7 @@ struct LogWorkoutSheet: View {
             
             HStack(spacing: 16) {
                 Label("Target: \(targetWeightLabel)", systemImage: "target")
-                Label("\(exercise.targetReps) reps", systemImage: "repeat")
+                Label("\(exercise.plannedSet.reps) reps", systemImage: "repeat")
             }
             .font(.subheadline)
             .foregroundStyle(AppTheme.textSecondary)
@@ -244,8 +239,9 @@ struct LogWorkoutSheet: View {
     }
     
     private var targetWeightLabel: String {
-        let baseLabel = exercise.targetWeight == 0 ? "BW" : Self.weightText(for: exercise.targetWeight) + " lbs"
-        return exercise.isMachine ? "\(baseLabel) (Machine)" : baseLabel
+        let plan = exercise.plannedSet
+        let baseLabel = plan.weight == 0 ? "BW" : Self.weightText(for: plan.weight) + " lbs"
+        return plan.isMachine ? "\(baseLabel) (Machine)" : baseLabel
     }
     
     private var floatingSaveButton: some View {

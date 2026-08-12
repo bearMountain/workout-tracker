@@ -42,4 +42,8 @@ extension WorkoutLog {
         let matchesEquipment = isMachine == exercise.isMachine
         return matchesEquipment && actualWeight >= exercise.targetWeight && actualReps >= exercise.targetReps
     }
+
+    func meets(_ plan: Exercise.PlannedSet) -> Bool {
+        isMachine == plan.isMachine && actualWeight >= plan.weight && actualReps >= plan.reps
+    }
 }

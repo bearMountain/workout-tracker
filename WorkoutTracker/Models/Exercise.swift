@@ -23,6 +23,44 @@ extension Exercise {
         Self.bestLog(in: activeLogs)
     }
 
+    struct PlannedSet: Equatable {
+        var weight: Double
+        var reps: Int
+        var isMachine: Bool
+    }
+
+    var plannedSet: PlannedSet {
+        Self.plannedSet(
+            in: activeLogs,
+            fallbackWeight: targetWeight,
+            fallbackReps: targetReps,
+            fallbackIsMachine: isMachine
+        )
+    }
+
+    static func plannedSet(
+        in logs: [WorkoutLog],
+        fallbackWeight: Double,
+        fallbackReps: Int,
+        fallbackIsMachine: Bool,
+        before date: Date = Date(),
+        calendar: Calendar = .current
+    ) -> PlannedSet {
+        if let last = bestLogFromLastWorkoutDay(in: logs, before: date, calendar: calendar) {
+            return PlannedSet(
+                weight: last.actualWeight,
+                reps: last.actualReps,
+                isMachine: last.isMachine
+            )
+        }
+
+        return PlannedSet(
+            weight: fallbackWeight,
+            reps: fallbackReps,
+            isMachine: fallbackIsMachine
+        )
+    }
+
     static func bestLog(in logs: [WorkoutLog]) -> WorkoutLog? {
         logs.filter { !$0.isSoftDeleted }.max { lhs, rhs in
             if lhs.actualWeight == rhs.actualWeight {

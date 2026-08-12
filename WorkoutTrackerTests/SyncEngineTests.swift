@@ -468,6 +468,64 @@ final class SyncEngineTests: XCTestCase {
         XCTAssertEqual(selectedLog?.id, lastDayBest.id)
     }
 
+    func testPlannedSetUsesLastWorkoutDayBestInsteadOfStoredTarget() throws {
+        let context = try makeTestContext()
+        let exercise = Exercise(name: "Calf Raises", targetWeight: 150, targetReps: 12, workoutType: .a, orderIndex: 0)
+        context.insert(exercise)
+
+        let calendar = Calendar(identifier: .gregorian)
+        let olderHeavier = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 1, hour: 12))!,
+            actualWeight: 160,
+            actualReps: 8,
+            exercise: exercise
+        )
+        let lastSessionBest = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 8, hour: 12))!,
+            actualWeight: 130,
+            actualReps: 10,
+            exercise: exercise
+        )
+        let lastSessionLighter = WorkoutLog(
+            date: calendar.date(from: DateComponents(year: 2026, month: 4, day: 8, hour: 12, minute: 5))!,
+            actualWeight: 110,
+            actualReps: 12,
+            exercise: exercise
+        )
+
+        [olderHeavier, lastSessionBest, lastSessionLighter].forEach(context.insert)
+        try context.save()
+
+        let plan = Exercise.plannedSet(
+            in: exercise.activeLogs,
+            fallbackWeight: exercise.targetWeight,
+            fallbackReps: exercise.targetReps,
+            fallbackIsMachine: exercise.isMachine,
+            before: calendar.date(from: DateComponents(year: 2026, month: 4, day: 15, hour: 12))!,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(plan.weight, 130)
+        XCTAssertEqual(plan.reps, 10)
+        XCTAssertFalse(plan.isMachine)
+    }
+
+    func testPlannedSetFallsBackToStoredTargetWhenThereIsNoPreviousSession() throws {
+        let context = try makeTestContext()
+        let exercise = Exercise(
+            name: "Calf Raises",
+            targetWeight: 150,
+            targetReps: 12,
+            isMachine: true,
+            workoutType: .a,
+            orderIndex: 0
+        )
+        context.insert(exercise)
+        try context.save()
+
+        XCTAssertEqual(exercise.plannedSet, Exercise.PlannedSet(weight: 150, reps: 12, isMachine: true))
+    }
+
     func testMarkSyncedDoesNotClearDeletedAt() throws {
         let context = try makeTestContext()
         let exercise = Exercise(name: "Squat", targetWeight: 200, targetReps: 5, workoutType: .a, orderIndex: 0)

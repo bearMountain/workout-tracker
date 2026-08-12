@@ -36,6 +36,15 @@ struct ExerciseRow: View {
         Exercise.bestLogFromLastWorkoutDay(in: logsForExercise)
     }
 
+    private var plannedSet: Exercise.PlannedSet {
+        Exercise.plannedSet(
+            in: logsForExercise,
+            fallbackWeight: exercise.targetWeight,
+            fallbackReps: exercise.targetReps,
+            fallbackIsMachine: exercise.isMachine
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             headerSection
@@ -76,8 +85,8 @@ struct ExerciseRow: View {
                     .foregroundStyle(AppTheme.textPrimary)
 
                 HStack(spacing: 12) {
-                    Label(targetWeightLabel, systemImage: "scalemass")
-                    Label("\(exercise.targetReps) reps", systemImage: "repeat")
+                    Label(plannedWeightLabel, systemImage: "scalemass")
+                    Label("\(plannedSet.reps) reps", systemImage: "repeat")
                 }
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
@@ -120,7 +129,7 @@ struct ExerciseRow: View {
                     Text(log.formattedSetLabel)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundStyle(log.metTarget ? AppTheme.success : AppTheme.textPrimary)
+                        .foregroundStyle(log.meets(plannedSet) ? AppTheme.success : AppTheme.textPrimary)
 
                     Text(log.feelingLabel)
                         .font(.caption)
@@ -164,11 +173,12 @@ struct ExerciseRow: View {
         }
     }
 
-    private var targetWeightLabel: String {
-        let baseLabel = exercise.targetWeight.rounded(.towardZero) == exercise.targetWeight
-            ? "\(Int(exercise.targetWeight)) lbs"
-            : String(format: "%.1f lbs", exercise.targetWeight)
-        return exercise.isMachine ? "\(baseLabel) (M)" : baseLabel
+    private var plannedWeightLabel: String {
+        let weight = plannedSet.weight
+        let baseLabel = weight.rounded(.towardZero) == weight
+            ? "\(Int(weight)) lbs"
+            : String(format: "%.1f lbs", weight)
+        return plannedSet.isMachine ? "\(baseLabel) (M)" : baseLabel
     }
 }
 
