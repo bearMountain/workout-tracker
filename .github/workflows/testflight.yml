@@ -1,0 +1,165 @@
+name: TestFlight
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "WorkoutTracker/**"
+      - "WorkoutTracker.xcodeproj/**"
+      - "ci/**"
+      - ".github/workflows/testflight.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run (unsigned compile), archive-only (cloud-sign IPA), or upload (TestFlight)"
+        required: true
+        type: choice
+        default: dry-run
+        options:
+          - dry-run
+          - archive-only
+          - upload
+
+concurrency:
+  group: testflight-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  APP_SCHEME: WorkoutTracker
+  APP_PROJECT: WorkoutTracker.xcodeproj
+  BUNDLE_ID: com.jiggidy.workout-tracker
+  DEVELOPMENT_TEAM: QF6B888F7S
+  ARCHIVE_PATH: build/WorkoutTracker.xcarchive
+  EXPORT_PATH: build/export
+
+jobs:
+  testflight:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve mode
+        id: mode
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_MODE: ${{ github.event.inputs.mode }}
+          UPLOAD_ENABLED: ${{ vars.TESTFLIGHT_UPLOAD_ENABLED }}
+          HAS_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID != '' }}
+          HAS_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID != '' }}
+          HAS_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 != '' }}
+        run: |
+          set -euo pipefail
+          SECRETS_PRESENT=false
+          if [ "${HAS_KEY_ID}" = "true" ] && [ "${HAS_ISSUER}" = "true" ] && [ "${HAS_P8}" = "true" ]; then
+            SECRETS_PRESENT=true
+          fi
+
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            MODE="${DISPATCH_MODE}"
+          elif [ "${SECRETS_PRESENT}" != "true" ]; then
+            MODE=dry-run
+          elif [ "${UPLOAD_ENABLED}" = "true" ]; then
+            MODE=upload
+          else
+            MODE=archive-only
+          fi
+
+          echo "mode=${MODE}" >> "${GITHUB_OUTPUT}"
+          echo "Resolved mode=${MODE} (event=${EVENT_NAME} secrets_present=${SECRETS_PRESENT} TESTFLIGHT_UPLOAD_ENABLED=${UPLOAD_ENABLED:-unset})"
+
+      - name: Set UTC timestamp build number
+        id: version
+        run: |
+          set -euo pipefail
+          BUILD_NUMBER="$(date -u +%Y%m%d%H%M%S)"
+          echo "build_number=${BUILD_NUMBER}" >> "${GITHUB_OUTPUT}"
+          echo "BUILD_NUMBER=${BUILD_NUMBER}" >> "${GITHUB_ENV}"
+          echo "Using CURRENT_PROJECT_VERSION=${BUILD_NUMBER}"
+
+      - name: Dry-run compile (unsigned)
+        if: steps.mode.outputs.mode == 'dry-run'
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project "${APP_PROJECT}" \
+            -scheme "${APP_SCHEME}" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CURRENT_PROJECT_VERSION="${BUILD_NUMBER}" \
+            build
+
+      - name: Write App Store Connect API key
+        if: steps.mode.outputs.mode != 'dry-run'
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        run: python3 ci/write_asc_api_key.py
+
+      - name: Archive (unsigned)
+        if: steps.mode.outputs.mode != 'dry-run'
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          xcodebuild \
+            -project "${APP_PROJECT}" \
+            -scheme "${APP_SCHEME}" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "${ARCHIVE_PATH}" \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}" \
+            CURRENT_PROJECT_VERSION="${BUILD_NUMBER}" \
+            archive
+
+      - name: Export IPA (cloud-sign)
+        if: steps.mode.outputs.mode != 'dry-run'
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          KEY_PATH="${HOME}/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          xcodebuild \
+            -exportArchive \
+            -archivePath "${ARCHIVE_PATH}" \
+            -exportPath "${EXPORT_PATH}" \
+            -exportOptionsPlist ci/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "${KEY_PATH}" \
+            -authenticationKeyID "${APP_STORE_CONNECT_API_KEY_ID}" \
+            -authenticationKeyIssuerID "${APP_STORE_CONNECT_ISSUER_ID}"
+
+      - name: Upload IPA artifact
+        if: steps.mode.outputs.mode != 'dry-run'
+        uses: actions/upload-artifact@v4
+        with:
+          name: WorkoutTracker-${{ steps.version.outputs.build_number }}
+          path: ${{ env.EXPORT_PATH }}/WorkoutTracker.ipa
+          if-no-files-found: error
+
+      - name: Upload to TestFlight
+        if: steps.mode.outputs.mode == 'upload'
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          IPA="$(find "${EXPORT_PATH}" -name '*.ipa' | head -n 1)"
+          if [ -z "${IPA}" ]; then
+            echo "No IPA found under ${EXPORT_PATH}"
+            exit 1
+          fi
+          xcrun altool --upload-app \
+            --type ios \
+            --file "${IPA}" \
+            --apiKey "${APP_STORE_CONNECT_API_KEY_ID}" \
+            --apiIssuer "${APP_STORE_CONNECT_ISSUER_ID}"

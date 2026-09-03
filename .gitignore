@@ -24,6 +24,8 @@ DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
+*.p8
+private_keys/
 
 # Logs
 *.log
