@@ -38,6 +38,11 @@ export async function initializeDatabase() {
   `;
 
   await sql`
+    ALTER TABLE exercises
+    ADD COLUMN IF NOT EXISTS progressive_overload BOOLEAN NOT NULL DEFAULT FALSE
+  `;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS workout_logs (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       exercise_id UUID NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
@@ -226,6 +231,7 @@ export function normalizeExercise(row: any) {
     target_weight: Number(row.target_weight),
     target_reps: Number(row.target_reps),
     is_machine: Boolean(row.is_machine),
+    progressive_overload: Boolean(row.progressive_overload),
     order_index: Number(row.order_index),
     ...normalizeSyncFields(row),
   };

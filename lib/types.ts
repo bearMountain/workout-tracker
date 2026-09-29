@@ -23,6 +23,7 @@ export interface Exercise {
   target_weight: number;
   target_reps: number;
   is_machine: boolean;
+  progressive_overload: boolean;
   notes: string;
   workout_type: WorkoutType;
   order_index: number;
@@ -39,6 +40,7 @@ export interface CreateExerciseInput extends SyncMutationInput {
   target_weight: number;
   target_reps: number;
   is_machine?: boolean;
+  progressive_overload?: boolean;
   notes?: string;
   workout_type: WorkoutType;
   order_index?: number;
@@ -49,6 +51,7 @@ export interface UpdateExerciseInput extends SyncMutationInput {
   target_weight?: number;
   target_reps?: number;
   is_machine?: boolean;
+  progressive_overload?: boolean;
   notes?: string;
   workout_type?: WorkoutType;
   order_index?: number;

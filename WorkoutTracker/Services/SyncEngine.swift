@@ -233,6 +233,7 @@ final class SyncEngine {
                     targetWeight: item.targetWeight,
                     targetReps: item.targetReps,
                     isMachine: item.isMachine,
+                    progressiveOverload: item.progressiveOverload,
                     notes: item.notes,
                     workoutType: item.workoutType.rawValue,
                     orderIndex: item.orderIndex,
@@ -341,6 +342,7 @@ final class SyncEngine {
                 existing.targetWeight = remote.targetWeight
                 existing.targetReps = remote.targetReps
                 existing.isMachine = remote.isMachine ?? existing.isMachine
+                existing.progressiveOverload = remote.progressiveOverload ?? existing.progressiveOverload
                 existing.notes = remote.notes
                 existing.workoutType = WorkoutType(rawValue: remote.workoutType) ?? .a
                 existing.orderIndex = remote.orderIndex
@@ -356,6 +358,7 @@ final class SyncEngine {
                     targetWeight: remote.targetWeight,
                     targetReps: remote.targetReps,
                     isMachine: remote.isMachine ?? false,
+                    progressiveOverload: remote.progressiveOverload ?? false,
                     notes: remote.notes,
                     workoutType: WorkoutType(rawValue: remote.workoutType) ?? .a,
                     orderIndex: remote.orderIndex

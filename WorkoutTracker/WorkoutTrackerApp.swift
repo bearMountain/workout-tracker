@@ -10,6 +10,7 @@ struct WorkoutTrackerApp: App {
     init() {
         do {
             let container = try WorkoutTrackerModelContainerFactory.makeSharedContainer()
+            ProgressiveOverloadSeed.applyIfNeeded(in: container.mainContext)
             self.sharedModelContainer = container
             self.syncEngine = SyncEngine(modelContext: container.mainContext)
         } catch {

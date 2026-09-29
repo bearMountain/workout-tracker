@@ -11,6 +11,7 @@ const TABLES_TO_CHECK = {
     'target_weight',
     'target_reps',
     'is_machine',
+    'progressive_overload',
     'notes',
     'workout_type',
     'order_index',
