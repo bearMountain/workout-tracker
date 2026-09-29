@@ -211,6 +211,15 @@ This is an improvement, but not the end state:
 - We should keep adding migration verification coverage as schema complexity grows
 - Any new persistent field must follow the checklist, not just the code path
 
+## Migration Log
+
+### 2026-09-29 — `exercises.progressive_overload`
+
+- Native: SwiftData schema V3 adds `progressiveOverload: Bool = false` with a lightweight migration from V2. A one-time launch seed turns the flag on for the existing exercises named Squats, Dead Lift, Leg Extensions, Pec Deck, and Bench Press. New exercises stay off until edited.
+- Server: `migrations/004_add_exercises_progressive_overload.sql` adds the column, seeds those same live names, and bumps `updated_at` so incremental sync pulls the value.
+- API: create and update accept `progressive_overload`. Omitted updates keep the stored value so older app builds do not clear the seed.
+- Runtime cue, highlight, and the +5 lb weight default read the checkbox only.
+
 ## Decision Rule
 
 If a change touches persisted data and we have to ask "will existing users survive this?", it is a migration and must follow this document.

@@ -19,7 +19,7 @@ test('splitSqlStatements separates multi-statement migration files', () => {
   ]);
 });
 
-test('loadMigrations returns the machine-flag migrations in order', async () => {
+test('loadMigrations returns schema migrations in order', async () => {
   const migrations = await loadMigrations();
 
   assert.deepEqual(
@@ -28,11 +28,17 @@ test('loadMigrations returns the machine-flag migrations in order', async () => 
       '001_add_exercises_is_machine_nullable.sql',
       '002_backfill_exercises_is_machine.sql',
       '003_enforce_exercises_is_machine_not_null.sql',
+      '004_add_exercises_progressive_overload.sql',
     ],
   );
 
   assert.match(migrations[1].sql, /workout_logs/i);
   assert.match(migrations[2].sql, /SET NOT NULL/i);
+  assert.match(migrations[3].sql, /SET NOT NULL/i);
+  for (const name of ['Squats', 'Dead Lift', 'Leg Extensions', 'Pec Deck', 'Bench Press']) {
+    assert.match(migrations[3].sql, new RegExp(name));
+  }
+  assert.match(migrations[3].sql, /updated_at = CURRENT_TIMESTAMP/i);
 });
 
 test('applyMigrations records migrations after executing statements in order', async () => {

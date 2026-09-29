@@ -45,9 +45,57 @@ struct ExerciseRow: View {
         )
     }
 
+    private var loggingSet: Exercise.PlannedSet {
+        Exercise.loggingSet(
+            progressiveOverload: exercise.progressiveOverload,
+            logs: logsForExercise,
+            fallbackWeight: exercise.targetWeight,
+            fallbackReps: exercise.targetReps,
+            fallbackIsMachine: exercise.isMachine
+        )
+    }
+
+    private var promptsLoadIncrease: Bool {
+        Exercise.promptsLoadIncrease(
+            progressiveOverload: exercise.progressiveOverload,
+            logs: logsForExercise
+        )
+    }
+
+    private var reachedRepTargetToday: Bool {
+        Exercise.reachedRepTarget(
+            progressiveOverload: exercise.progressiveOverload,
+            logs: todaysLogs
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing) {
             headerSection
+
+            if promptsLoadIncrease {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.circle.fill")
+                    Text("Add \(Int(ProgressiveOverloadRules.loadIncreasePounds)) lb")
+                    Text("·")
+                    Text(displayWeightLabel)
+                }
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(AppTheme.gold)
+                .accessibilityIdentifier("progressive-overload-highlight")
+            }
+
+            if reachedRepTargetToday {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.seal.fill")
+                    Text("\(ProgressiveOverloadRules.repTargetLabel) reached")
+                }
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(AppTheme.success)
+                .accessibilityIdentifier("rep-target-reached")
+            }
 
             if !todaysLogs.isEmpty {
                 todaysSetsSection
@@ -74,7 +122,14 @@ struct ExerciseRow: View {
             .disabled(isReordering)
             .opacity(isReordering ? 0.5 : 1)
         }
-        .cardStyle()
+        .padding(AppTheme.cardPadding)
+        .background(promptsLoadIncrease ? AppTheme.gold.opacity(0.14) : AppTheme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(promptsLoadIncrease ? AppTheme.gold : AppTheme.cardBorder, lineWidth: promptsLoadIncrease ? 2 : 1)
+        )
+        .accessibilityElement(children: .contain)
     }
 
     private var headerSection: some View {
@@ -85,8 +140,8 @@ struct ExerciseRow: View {
                     .foregroundStyle(AppTheme.textPrimary)
 
                 HStack(spacing: 12) {
-                    Label(plannedWeightLabel, systemImage: "scalemass")
-                    Label("\(plannedSet.reps) reps", systemImage: "repeat")
+                    Label(displayWeightLabel, systemImage: "scalemass")
+                    Label("\(displaySet.reps) reps", systemImage: "repeat")
                 }
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
@@ -173,12 +228,20 @@ struct ExerciseRow: View {
         }
     }
 
-    private var plannedWeightLabel: String {
-        let weight = plannedSet.weight
-        let baseLabel = weight.rounded(.towardZero) == weight
+    private var displaySet: Exercise.PlannedSet {
+        promptsLoadIncrease ? loggingSet : plannedSet
+    }
+
+    private var displayWeightLabel: String {
+        let weight = displaySet.weight
+        let baseLabel = weightLabel(weight)
+        return displaySet.isMachine ? "\(baseLabel) (M)" : baseLabel
+    }
+
+    private func weightLabel(_ weight: Double) -> String {
+        weight.rounded(.towardZero) == weight
             ? "\(Int(weight)) lbs"
             : String(format: "%.1f lbs", weight)
-        return plannedSet.isMachine ? "\(baseLabel) (M)" : baseLabel
     }
 }
 

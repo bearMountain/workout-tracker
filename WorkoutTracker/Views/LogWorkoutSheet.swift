@@ -19,9 +19,10 @@ struct LogWorkoutSheet: View {
         self.onDismiss = onDismiss
         
         let plan = exercise.plannedSet
-        _weightText = State(initialValue: Self.weightText(for: plan.weight))
+        let logging = exercise.loggingSet
+        _weightText = State(initialValue: Self.weightText(for: logging.weight))
         _reps = State(initialValue: plan.reps)
-        _isMachine = State(initialValue: exercise.isMachine || plan.isMachine)
+        _isMachine = State(initialValue: exercise.isMachine || logging.isMachine)
     }
     
     var body: some View {
@@ -78,6 +79,14 @@ struct LogWorkoutSheet: View {
             }
             .font(.subheadline)
             .foregroundStyle(AppTheme.textSecondary)
+
+            if exercise.promptsLoadIncrease {
+                Text("Add \(Int(ProgressiveOverloadRules.loadIncreasePounds)) lb from last session")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(AppTheme.gold)
+                    .accessibilityIdentifier("progressive-overload-weight-default")
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
@@ -101,13 +110,14 @@ struct LogWorkoutSheet: View {
                     }
                     
                     ZStack {
-                        TextField("Weight", text: $weightText)
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundStyle(AppTheme.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .keyboardType(.decimalPad)
-                            .focused($isWeightFieldFocused)
-                            .opacity(showsBodyWeightBadge ? 0.02 : 1)
+                    TextField("Weight", text: $weightText)
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .keyboardType(.decimalPad)
+                        .focused($isWeightFieldFocused)
+                        .opacity(showsBodyWeightBadge ? 0.02 : 1)
+                        .accessibilityIdentifier("log-weight-input")
                         
                         if showsBodyWeightBadge {
                             Text("BW")
@@ -239,7 +249,7 @@ struct LogWorkoutSheet: View {
     }
     
     private var targetWeightLabel: String {
-        let plan = exercise.plannedSet
+        let plan = exercise.promptsLoadIncrease ? exercise.loggingSet : exercise.plannedSet
         let baseLabel = plan.weight == 0 ? "BW" : Self.weightText(for: plan.weight) + " lbs"
         return plan.isMachine ? "\(baseLabel) (Machine)" : baseLabel
     }

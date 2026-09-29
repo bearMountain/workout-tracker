@@ -101,13 +101,14 @@ class WorkoutViewModel {
 
     // MARK: - Exercise CRUD
 
-    func addExercise(name: String, targetWeight: Double, targetReps: Int, isMachine: Bool, notes: String, workoutType: WorkoutType) {
+    func addExercise(name: String, targetWeight: Double, targetReps: Int, isMachine: Bool, progressiveOverload: Bool, notes: String, workoutType: WorkoutType) {
         let maxIndex = exercises.filter { $0.workoutType == workoutType }.map { $0.orderIndex }.max() ?? -1
         let exercise = Exercise(
             name: name,
             targetWeight: targetWeight,
             targetReps: targetReps,
             isMachine: isMachine,
+            progressiveOverload: progressiveOverload,
             notes: notes,
             workoutType: workoutType,
             orderIndex: maxIndex + 1
@@ -118,11 +119,12 @@ class WorkoutViewModel {
         syncEngine.queueForSync(exercise)
     }
 
-    func updateExercise(_ exercise: Exercise, name: String, targetWeight: Double, targetReps: Int, isMachine: Bool, notes: String) {
+    func updateExercise(_ exercise: Exercise, name: String, targetWeight: Double, targetReps: Int, isMachine: Bool, progressiveOverload: Bool, notes: String) {
         exercise.name = name
         exercise.targetWeight = targetWeight
         exercise.targetReps = targetReps
         exercise.isMachine = isMachine
+        exercise.progressiveOverload = progressiveOverload
         exercise.notes = notes
         exercise.markDirty()
         try? modelContext.save()

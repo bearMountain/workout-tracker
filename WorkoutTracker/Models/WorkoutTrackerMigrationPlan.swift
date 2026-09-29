@@ -3,18 +3,19 @@ import SwiftData
 
 enum WorkoutTrackerMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [WorkoutTrackerSchemaV1.self, WorkoutTrackerSchemaV2.self]
+        [WorkoutTrackerSchemaV1.self, WorkoutTrackerSchemaV2.self, WorkoutTrackerSchemaV3.self]
     }
 
     static var stages: [MigrationStage] {
         [
-            .lightweight(fromVersion: WorkoutTrackerSchemaV1.self, toVersion: WorkoutTrackerSchemaV2.self)
+            .lightweight(fromVersion: WorkoutTrackerSchemaV1.self, toVersion: WorkoutTrackerSchemaV2.self),
+            .lightweight(fromVersion: WorkoutTrackerSchemaV2.self, toVersion: WorkoutTrackerSchemaV3.self)
         ]
     }
 }
 
 enum WorkoutTrackerModelContainerFactory {
-    static let latestSchema = Schema(versionedSchema: WorkoutTrackerSchemaV2.self)
+    static let latestSchema = Schema(versionedSchema: WorkoutTrackerSchemaV3.self)
 
     static func makeSharedContainer() throws -> ModelContainer {
         let configuration = ModelConfiguration(schema: latestSchema, isStoredInMemoryOnly: false)

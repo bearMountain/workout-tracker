@@ -229,6 +229,7 @@ final class SyncEngineTests: XCTestCase {
         let created = await mock.createdExercises
         XCTAssertEqual(created.count, 1)
         XCTAssertEqual(created.first?.id, exercise.localID.uuidString)
+        XCTAssertEqual(created.first?.progressiveOverload, false)
         XCTAssertFalse(exercise.isDirty)
         XCTAssertEqual(exercise.remoteID, exercise.localID.uuidString)
     }
@@ -584,5 +585,237 @@ final class SyncEngineTests: XCTestCase {
         let names = Set(progress.exercises(for: .a).map(\.name))
 
         XCTAssertEqual(names, ["Squat", "Glute Box Step-down"])
+    }
+
+    func testPullAppliesProgressiveOverloadFlag() async throws {
+        let context = try makeTestContext()
+        let mock = MockAPIClient()
+        let id = UUID()
+        await mock.setExercises([
+            APIExercise(
+                id: id.uuidString,
+                name: "Bench Press",
+                targetWeight: 185,
+                targetReps: 8,
+                isMachine: false,
+                progressiveOverload: true,
+                notes: "",
+                workoutType: "A",
+                orderIndex: 0,
+                clientUpdatedAt: "2026-01-01T00:00:00.000Z",
+                createdAt: "2026-01-01T00:00:00.000Z",
+                updatedAt: "2026-01-01T00:00:00.000Z",
+                deletedAt: nil,
+                serverVersion: 2,
+                lastIdempotencyKey: nil
+            )
+        ])
+
+        let engine = makeEngine(context: context, mock: mock)
+        await engine.syncAll()
+
+        let exercises = try context.fetch(FetchDescriptor<Exercise>())
+        XCTAssertEqual(exercises.first?.progressiveOverload, true)
+    }
+
+    func testPullPreservesLocalProgressiveOverloadWhenRemoteOmitsIt() async throws {
+        let context = try makeTestContext()
+        let mock = MockAPIClient()
+        let exercise = Exercise(
+            name: "Squats",
+            targetWeight: 225,
+            targetReps: 8,
+            progressiveOverload: true,
+            workoutType: .a,
+            orderIndex: 0
+        )
+        exercise.remoteID = exercise.localID.uuidString
+        exercise.markSynced(remoteID: exercise.localID.uuidString, serverVersion: 1)
+        context.insert(exercise)
+        try context.save()
+
+        await mock.setExercises([
+            APIExercise(
+                id: exercise.remoteID ?? "",
+                name: "Squats",
+                targetWeight: 225,
+                targetReps: 8,
+                isMachine: false,
+                notes: "",
+                workoutType: "A",
+                orderIndex: 0,
+                clientUpdatedAt: isoString(Date()),
+                createdAt: isoString(Date().addingTimeInterval(-3600)),
+                updatedAt: isoString(Date()),
+                deletedAt: nil,
+                serverVersion: 2,
+                lastIdempotencyKey: nil
+            )
+        ])
+
+        let engine = makeEngine(context: context, mock: mock)
+        try await engine.pullLatestFromServer()
+
+        XCTAssertTrue(exercise.progressiveOverload)
+    }
+
+    func testCheckedExerciseAcknowledgesEightOrMoreReps() throws {
+        let calendar = testCalendar
+        let today = date(year: 2026, month: 4, day: 18, calendar: calendar)
+        let logs = [
+            log(on: date(year: 2026, month: 4, day: 18, hour: 9, calendar: calendar), weight: 135, reps: 8, feeling: 1),
+            log(on: date(year: 2026, month: 4, day: 18, hour: 9, minute: 5, calendar: calendar), weight: 225, reps: 6)
+        ]
+
+        XCTAssertTrue(Exercise.reachedRepTarget(progressiveOverload: true, logs: logs, on: today, calendar: calendar))
+        XCTAssertFalse(Exercise.reachedRepTarget(progressiveOverload: true, logs: [logs[1]], on: today, calendar: calendar))
+        XCTAssertFalse(Exercise.reachedRepTarget(progressiveOverload: false, logs: logs, on: today, calendar: calendar))
+    }
+
+    func testLoadPromptUsesPriorDayBestPlusFiveAndDoesNotExpire() throws {
+        let calendar = testCalendar
+        let session = date(year: 2026, month: 4, day: 1, hour: 12, calendar: calendar)
+        let logs = [
+            log(on: session, weight: 185, reps: 10),
+            log(on: date(year: 2026, month: 4, day: 1, hour: 12, minute: 4, calendar: calendar), weight: 225, reps: 6),
+            log(on: date(year: 2026, month: 4, day: 1, hour: 12, minute: 8, calendar: calendar), weight: 225, reps: 8)
+        ]
+        let nextAppearance = date(year: 2026, month: 4, day: 29, hour: 12, calendar: calendar)
+
+        XCTAssertTrue(Exercise.promptsLoadIncrease(progressiveOverload: true, logs: logs, before: nextAppearance, calendar: calendar))
+        let prompted = Exercise.loggingSet(
+            progressiveOverload: true,
+            logs: logs,
+            fallbackWeight: 135,
+            fallbackReps: 8,
+            fallbackIsMachine: false,
+            before: nextAppearance,
+            calendar: calendar
+        )
+        XCTAssertEqual(prompted.weight, 230)
+        XCTAssertEqual(prompted.reps, 8)
+
+        let sameDayLater = date(year: 2026, month: 4, day: 29, hour: 13, calendar: calendar)
+        let withToday = logs + [log(on: sameDayLater, weight: 230, reps: 8)]
+        let stillPriorBaseline = Exercise.loggingSet(
+            progressiveOverload: true,
+            logs: withToday,
+            fallbackWeight: 135,
+            fallbackReps: 8,
+            fallbackIsMachine: false,
+            before: sameDayLater,
+            calendar: calendar
+        )
+        XCTAssertEqual(stillPriorBaseline.weight, 230)
+        XCTAssertTrue(Exercise.reachedRepTarget(progressiveOverload: true, logs: withToday, on: sameDayLater, calendar: calendar))
+    }
+
+    func testWarmupEightRepsLightsRowButWeightUsesHeaviestSet() throws {
+        let calendar = testCalendar
+        let logs = [
+            log(on: date(year: 2026, month: 4, day: 8, hour: 12, calendar: calendar), weight: 135, reps: 10, feeling: 1),
+            log(on: date(year: 2026, month: 4, day: 8, hour: 12, minute: 6, calendar: calendar), weight: 225, reps: 6, feeling: 4)
+        ]
+        let next = date(year: 2026, month: 4, day: 15, hour: 12, calendar: calendar)
+
+        XCTAssertTrue(Exercise.promptsLoadIncrease(progressiveOverload: true, logs: logs, before: next, calendar: calendar))
+        let prompted = Exercise.loggingSet(
+            progressiveOverload: true,
+            logs: logs,
+            fallbackWeight: 200,
+            fallbackReps: 8,
+            fallbackIsMachine: false,
+            before: next,
+            calendar: calendar
+        )
+        XCTAssertEqual(prompted.weight, 230)
+        XCTAssertEqual(prompted.reps, 6)
+    }
+
+    func testShortOfEightAndUncheckedExercisesKeepExistingWeight() throws {
+        let calendar = testCalendar
+        let logs = [log(on: date(year: 2026, month: 4, day: 8, hour: 12, calendar: calendar), weight: 0, reps: 12)]
+        let next = date(year: 2026, month: 4, day: 20, hour: 12, calendar: calendar)
+
+        XCTAssertFalse(Exercise.promptsLoadIncrease(progressiveOverload: false, logs: logs, before: next, calendar: calendar))
+        let unchanged = Exercise.loggingSet(
+            progressiveOverload: false,
+            logs: logs,
+            fallbackWeight: 0,
+            fallbackReps: 8,
+            fallbackIsMachine: false,
+            before: next,
+            calendar: calendar
+        )
+        XCTAssertEqual(unchanged.weight, 0)
+        XCTAssertEqual(unchanged.reps, 12)
+        XCTAssertFalse(Exercise.reachedRepTarget(progressiveOverload: false, logs: logs, on: logs[0].date, calendar: calendar))
+
+        let seven = [log(on: date(year: 2026, month: 4, day: 8, hour: 12, calendar: calendar), weight: 200, reps: 7)]
+        XCTAssertFalse(Exercise.promptsLoadIncrease(progressiveOverload: true, logs: seven, before: next, calendar: calendar))
+        let sameWeight = Exercise.loggingSet(
+            progressiveOverload: true,
+            logs: seven,
+            fallbackWeight: 185,
+            fallbackReps: 8,
+            fallbackIsMachine: false,
+            before: next,
+            calendar: calendar
+        )
+        XCTAssertEqual(sameWeight.weight, 200)
+        XCTAssertEqual(sameWeight.reps, 7)
+    }
+
+    func testCheckedBodyweightNameStillPromptsAndUncheckedSquatDoesNot() throws {
+        let calendar = testCalendar
+        let logs = [log(on: date(year: 2026, month: 4, day: 8, hour: 12, calendar: calendar), weight: 0, reps: 8)]
+        let next = date(year: 2026, month: 4, day: 15, hour: 12, calendar: calendar)
+
+        XCTAssertTrue(Exercise.promptsLoadIncrease(progressiveOverload: true, logs: logs, before: next, calendar: calendar))
+        XCTAssertEqual(
+            Exercise.loggingSet(
+                progressiveOverload: true,
+                logs: logs,
+                fallbackWeight: 0,
+                fallbackReps: 8,
+                fallbackIsMachine: false,
+                before: next,
+                calendar: calendar
+            ).weight,
+            5
+        )
+        XCTAssertFalse(Exercise.promptsLoadIncrease(progressiveOverload: false, logs: logs, before: next, calendar: calendar))
+        XCTAssertFalse(Exercise.reachedRepTarget(progressiveOverload: false, logs: logs, on: logs[0].date, calendar: calendar))
+    }
+
+    func testDeletedEightRepSetDoesNotCount() throws {
+        let calendar = testCalendar
+        let entry = log(on: date(year: 2026, month: 4, day: 8, hour: 12, calendar: calendar), weight: 185, reps: 8)
+        entry.markDeleted()
+        let next = date(year: 2026, month: 4, day: 15, hour: 12, calendar: calendar)
+
+        XCTAssertFalse(Exercise.promptsLoadIncrease(progressiveOverload: true, logs: [entry], before: next, calendar: calendar))
+        XCTAssertFalse(Exercise.reachedRepTarget(progressiveOverload: true, logs: [entry], on: entry.date, calendar: calendar))
+    }
+
+    private var testCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+        return calendar
+    }
+
+    private func date(
+        year: Int,
+        month: Int,
+        day: Int,
+        hour: Int = 12,
+        minute: Int = 0,
+        calendar: Calendar
+    ) -> Date {
+        calendar.date(from: DateComponents(year: year, month: month, day: day, hour: hour, minute: minute))!
+    }
+
+    private func log(on date: Date, weight: Double, reps: Int, feeling: Int = 3) -> WorkoutLog {
+        WorkoutLog(date: date, actualWeight: weight, actualReps: reps, feeling: feeling)
     }
 }

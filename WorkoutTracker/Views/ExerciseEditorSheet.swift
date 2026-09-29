@@ -11,6 +11,7 @@ struct ExerciseEditorSheet: View {
     @State private var targetWeight: Double
     @State private var targetReps: Int
     @State private var isMachine: Bool
+    @State private var progressiveOverload: Bool
     @State private var notes: String
     
     var isEditing: Bool { exercise != nil }
@@ -25,6 +26,7 @@ struct ExerciseEditorSheet: View {
         _targetWeight = State(initialValue: exercise?.targetWeight ?? 0)
         _targetReps = State(initialValue: exercise?.targetReps ?? 8)
         _isMachine = State(initialValue: exercise?.isMachine ?? false)
+        _progressiveOverload = State(initialValue: exercise?.progressiveOverload ?? false)
         _notes = State(initialValue: exercise?.notes ?? "")
     }
     
@@ -39,6 +41,7 @@ struct ExerciseEditorSheet: View {
                     nameSection
                     targetSection
                     equipmentSection
+                    progressiveOverloadSection
                     notesSection
                 }
                 .padding()
@@ -87,6 +90,38 @@ struct ExerciseEditorSheet: View {
                 .font(.body)
             }
             .buttonStyle(.plain)
+        }
+        .cardStyle()
+    }
+
+    private var progressiveOverloadSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Progress")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.textSecondary)
+
+            Button {
+                progressiveOverload.toggle()
+            } label: {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: progressiveOverload ? "checkmark.square.fill" : "square")
+                        .foregroundStyle(progressiveOverload ? AppTheme.accent : AppTheme.textMuted)
+                        .padding(.top, 2)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Progressive overload")
+                            .foregroundStyle(AppTheme.textPrimary)
+                        Text("Target \(ProgressiveOverloadRules.repTargetLabel) reps. Hitting \(ProgressiveOverloadRules.repTargetHit) or more highlights this exercise next time and starts the weight \(Int(ProgressiveOverloadRules.loadIncreasePounds)) lb heavier.")
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .multilineTextAlignment(.leading)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .font(.body)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Progressive overload")
+            .accessibilityValue(progressiveOverload ? "On" : "Off")
         }
         .cardStyle()
     }
@@ -193,9 +228,9 @@ struct ExerciseEditorSheet: View {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         
         if let exercise = exercise {
-            viewModel.updateExercise(exercise, name: trimmedName, targetWeight: targetWeight, targetReps: targetReps, isMachine: isMachine, notes: notes)
+            viewModel.updateExercise(exercise, name: trimmedName, targetWeight: targetWeight, targetReps: targetReps, isMachine: isMachine, progressiveOverload: progressiveOverload, notes: notes)
         } else {
-            viewModel.addExercise(name: trimmedName, targetWeight: targetWeight, targetReps: targetReps, isMachine: isMachine, notes: notes, workoutType: workoutType)
+            viewModel.addExercise(name: trimmedName, targetWeight: targetWeight, targetReps: targetReps, isMachine: isMachine, progressiveOverload: progressiveOverload, notes: notes, workoutType: workoutType)
         }
         
         onDismiss()

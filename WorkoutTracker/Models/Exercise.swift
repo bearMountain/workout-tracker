@@ -1,6 +1,49 @@
 import Foundation
 import SwiftData
 
+enum ProgressiveOverloadRules {
+    static let repTargetLowerBound = 6
+    static let repTargetHit = 8
+    static let loadIncreasePounds = 5.0
+    static let repTargetLabel = "6–8"
+
+    /// One-time defaults for exercises that already exist. Cue, highlight, and the +5 lb weight default read the checkbox only.
+    static let seedNames: Set<String> = [
+        "Squats",
+        "Dead Lift",
+        "Leg Extensions",
+        "Pec Deck",
+        "Bench Press"
+    ]
+
+    static func hitRepTarget(reps: Int) -> Bool {
+        reps >= repTargetHit
+    }
+}
+
+enum ProgressiveOverloadSeed {
+    static let defaultsKey = "progressiveOverload.seededExerciseNames.v1"
+
+    @discardableResult
+    static func applyIfNeeded(in context: ModelContext, defaults: UserDefaults = .standard) -> Bool {
+        guard !defaults.bool(forKey: defaultsKey) else { return false }
+
+        let exercises = (try? context.fetch(FetchDescriptor<Exercise>())) ?? []
+        for exercise in exercises where shouldSeed(exercise) {
+            exercise.progressiveOverload = true
+        }
+        try? context.save()
+        defaults.set(true, forKey: defaultsKey)
+        return true
+    }
+
+    private static func shouldSeed(_ exercise: Exercise) -> Bool {
+        !exercise.isSoftDeleted
+            && !exercise.progressiveOverload
+            && ProgressiveOverloadRules.seedNames.contains(exercise.name)
+    }
+}
+
 extension Exercise: SyncableModel {
     static let entityKind: SyncEntityKind = .exercise
 }
@@ -59,6 +102,90 @@ extension Exercise {
             reps: fallbackReps,
             isMachine: fallbackIsMachine
         )
+    }
+
+    static func loggingSet(
+        progressiveOverload: Bool,
+        logs: [WorkoutLog],
+        fallbackWeight: Double,
+        fallbackReps: Int,
+        fallbackIsMachine: Bool,
+        before date: Date = Date(),
+        calendar: Calendar = .current
+    ) -> PlannedSet {
+        let plan = plannedSet(
+            in: logs,
+            fallbackWeight: fallbackWeight,
+            fallbackReps: fallbackReps,
+            fallbackIsMachine: fallbackIsMachine,
+            before: date,
+            calendar: calendar
+        )
+        guard promptsLoadIncrease(
+            progressiveOverload: progressiveOverload,
+            logs: logs,
+            before: date,
+            calendar: calendar
+        ),
+        let best = bestLogFromLastWorkoutDay(in: logs, before: date, calendar: calendar)
+        else {
+            return plan
+        }
+
+        return PlannedSet(
+            weight: best.actualWeight + ProgressiveOverloadRules.loadIncreasePounds,
+            reps: plan.reps,
+            isMachine: plan.isMachine
+        )
+    }
+
+    static func promptsLoadIncrease(
+        progressiveOverload: Bool,
+        logs: [WorkoutLog],
+        before date: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Bool {
+        guard progressiveOverload else { return false }
+        guard let best = bestLogFromLastWorkoutDay(in: logs, before: date, calendar: calendar) else {
+            return false
+        }
+        return logs.contains { log in
+            !log.isSoftDeleted
+                && calendar.isDate(log.date, inSameDayAs: best.date)
+                && ProgressiveOverloadRules.hitRepTarget(reps: log.actualReps)
+        }
+    }
+
+    static func reachedRepTarget(
+        progressiveOverload: Bool,
+        logs: [WorkoutLog],
+        on date: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Bool {
+        guard progressiveOverload else { return false }
+        return logs.contains { log in
+            !log.isSoftDeleted
+                && calendar.isDate(log.date, inSameDayAs: date)
+                && ProgressiveOverloadRules.hitRepTarget(reps: log.actualReps)
+        }
+    }
+
+    var loggingSet: PlannedSet {
+        Self.loggingSet(
+            progressiveOverload: progressiveOverload,
+            logs: activeLogs,
+            fallbackWeight: targetWeight,
+            fallbackReps: targetReps,
+            fallbackIsMachine: isMachine
+        )
+    }
+
+    var promptsLoadIncrease: Bool {
+        Self.promptsLoadIncrease(progressiveOverload: progressiveOverload, logs: activeLogs)
+    }
+
+    var reachedRepTargetToday: Bool {
+        Self.reachedRepTarget(progressiveOverload: progressiveOverload, logs: activeLogs)
     }
 
     static func bestLog(in logs: [WorkoutLog]) -> WorkoutLog? {
