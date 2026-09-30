@@ -33,6 +33,7 @@ struct HomeView: View {
                     }
 
                     statusSection
+                    todaySessionSection
                     BodyWeightCard(syncEngine: syncEngine)
                     workoutsSection
                 }
@@ -120,6 +121,17 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
+    }
+
+    private var todaySessionSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing) {
+            Text("Today")
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundStyle(AppTheme.textPrimary)
+
+            TodaySessionCard(session: TrainingPlan.session(on: .now))
+        }
     }
 
     private var workoutsSection: some View {
