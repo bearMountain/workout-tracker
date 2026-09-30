@@ -15,6 +15,12 @@ struct ContentView: View {
                     }
                     .tag(0)
 
+                TrainingPlanView()
+                    .tabItem {
+                        Label("Plan", systemImage: "list.bullet.clipboard")
+                    }
+                    .tag(4)
+
                 HistoryView()
                     .tabItem {
                         Label("History", systemImage: "calendar")
